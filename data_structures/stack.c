@@ -74,7 +74,7 @@ OBJECT stack_pop(STACK *st) {
 }
 
 OBJECT stack_top(STACK *st) {
-	if(st == NULL) {
+	if(st == NULL || st->size == 0) {
 		return (OBJECT) { .content = NULL, .content_type = NULL_TYPE};
 	}
 
