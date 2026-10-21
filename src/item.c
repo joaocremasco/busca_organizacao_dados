@@ -2,53 +2,60 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 #include "../include/item.h"
 
 
 typedef struct {
-    char *name;
-    char *value;
+  char *name;
+  char *value;
 } FIELD;
 
 struct item_ {
-    FIELD *fields;    /* vetor de pares */
-    size_t count;     /* pares em uso */
-    size_t capacity;  /* pares que cabem sem realloc */
+  FIELD *fields;    /* vetor de pares */
+  size_t count;     /* pares em uso */
+  size_t capacity;  /* pares que cabem sem realloc */
+};
+
+struct item_store {
+    ITEM **items;     /* vetor de ponteiros para itens */
+    size_t count;     /* quantos itens foram registrados */
+    size_t capacity;  /* quantos cabem sem realloc */
 };
 
 static char *copy_string(const char *s)
 {
-    size_t n = strlen(s) + 1;          /* +1 para o '\0' */
-    char *p = malloc(n);
-    if (p != NULL)
-        memcpy(p, s, n);
-    return p;
+  size_t n = strlen(s) + 1;          /* +1 para o '\0' */
+  char *p = malloc(n);
+  if (p != NULL)
+    memcpy(p, s, n);
+  return p;
 }
 
 ITEM *item_create(ITEM_STORE *store, size_t field_capacity)
 {
-    (void)store; /* só para evitar warning */
+  (void)store; /* só para evitar warning */
 
-    ITEM *item = malloc(sizeof(*item));
-    if (item == NULL)
-        return NULL;
+  ITEM *item = malloc(sizeof(*item));
+  if (item == NULL)
+    return NULL;
 
-    item->count = 0;
-    item->fields = NULL;
-    item->capacity = 0;
+  item->count = 0;
+  item->fields = NULL;
+  item->capacity = 0;
 
-    if (field_capacity > 0) {
-        item->fields = malloc(sizeof(*item->fields) * field_capacity);
-        if (item->fields == NULL) {
-            free(item);
-            return NULL;
-        }
-        item->capacity = field_capacity;
+  if (field_capacity > 0) {
+    item->fields = malloc(sizeof(*item->fields) * field_capacity);
+    if (item->fields == NULL) {
+      free(item);
+      return NULL;
     }
+    item->capacity = field_capacity;
+  }
 
-    return item;
+  return item;
 
-/*if (field_capacity > 0) {
+  /*if (field_capacity > 0) {
     item->fields = malloc(sizeof(*item->fields) * field_capacity);
     if (item->fields == NULL) {
       free(item); 
@@ -103,4 +110,63 @@ bool item_set(ITEM *item, const char *name, const char *raw_value){
   return true;
 }
 
+const char *item_get(const ITEM *item, const char *name){
+  if(item == NULL || name == NULL)
+    return NULL;
 
+  for (int i = 0; i < item->count; i++) {
+    if(strcmp(item->fields[i].name, name) == 0)
+      return item->fields[i].value;
+  }
+  return NULL;
+}
+
+bool item_get_number(const ITEM *item, const char *name, double *value){
+  if(value == NULL)
+    return false;
+
+  const char *texto = item_get(item, name);
+  if(texto == NULL)
+    return false;
+
+  char *fim;
+  double x = strtod(texto, &fim);
+  if (fim == texto)
+    return false;            /* nada foi convertido */
+
+  while (isspace((unsigned char)*fim))
+    fim++;
+  
+  if (*fim != '\0')
+    return false;      /* sobrou lixo */
+
+  *value = x;
+  return true;
+}
+
+size_t item_field_count(const ITEM *item){
+  return item == NULL ? 0 : item->count;
+}
+
+const char *item_field_name(const ITEM *item, size_t index){
+  return (item == NULL || index >= item->count) ? NULL : item->fields[index].name;
+}
+const char *item_field_value(const ITEM *item, size_t index){
+  return (item == NULL || index >= item->count) ? NULL : item->fields[index].value;
+}
+
+static bool store_add(ITEM_STORE *store, ITEM *item){
+  if
+}
+
+ITEM_STORE *item_store_create(void){
+  ITEM_STORE *item_store = malloc(sizeof(*item_store));
+  if(item_store == NULL)
+    return NULL;
+
+  item_store->count = 0;
+  item_store->items = NULL;
+  item_store->capacity = 0;
+
+  return item_store;
+}
