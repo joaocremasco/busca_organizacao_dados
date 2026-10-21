@@ -53,6 +53,11 @@ ITEM *item_create(ITEM_STORE *store, size_t field_capacity)
     item->capacity = field_capacity;
   }
 
+  if(!store_add(store, item)){
+    free(item);
+    return NULL;
+  }
+
   return item;
 
   /*if (field_capacity > 0) {
@@ -155,18 +160,44 @@ const char *item_field_value(const ITEM *item, size_t index){
   return (item == NULL || index >= item->count) ? NULL : item->fields[index].value;
 }
 
-static bool store_add(ITEM_STORE *store, ITEM *item){
-  if
-}
-
 ITEM_STORE *item_store_create(void){
-  ITEM_STORE *item_store = malloc(sizeof(*item_store));
-  if(item_store == NULL)
+  ITEM_STORE *store = malloc(sizeof(*store));
+  if(store == NULL)
     return NULL;
 
-  item_store->count = 0;
-  item_store->items = NULL;
-  item_store->capacity = 0;
+  store->count = 0;
+  store->items = NULL;
+  store->capacity = 0;
 
-  return item_store;
+  return store;
 }
+
+static bool store_add(ITEM_STORE *store, ITEM *item, size_t count){
+  if(store == NULL || item == NULL || count == 0)
+    return false;
+
+  for(int i = 0; i < count; i++){
+    store->items[store->count + i] = item->fields[i];
+  }
+  store->count += count;
+  return true;
+}
+
+void item_store_destroy(ITEM_STORE **store){
+  if(store == NULL || *store == NULL)
+    return;
+
+  int i = 0;
+
+  while((*store)->items[i] != NULL){
+    free((*store)->items[i].name);
+    free((*store)->items[i].value);
+    free((*store)->items[i]);
+    i++;
+  }
+
+  free((*store)->items);
+  free(*store);
+  *store == NULL;
+}
+
