@@ -46,15 +46,9 @@ bool stack_push(STACK *st, OBJECT object) {
 	
 	NODE *node = node_init();
 	node_set_object(node, object);
-
-	if(st->size == 0) {
-		st->top = node;
-		node_set_prev(node, NULL);
-	}
-	else {
-		node_set_prev(node, st->top);
-		st->top = node;
-	}
+	
+	node_set_prev(node, st->top);
+	st->top = node;
 
 	st->size++;
 	
