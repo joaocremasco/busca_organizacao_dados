@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include "queue.h"
 
-struct queue_node {
-    ITEM *item;
-    struct queue_node *next;
-};
+   typedef struct queue_node {
+       void *data;
+       struct queue_node *next;
+   } QUEUE_QUEUE_NODE;
 
 struct queue {
-    NODE *head;
-    NODE *tail;
+    QUEUE_NODE *head;
+    QUEUE_NODE *tail;
     size_t size;
 };
 
 QUEUE *queue_create(void) {
-    QUEUE *queue = malloc(sizeof(QUEUE));
+    QUEUE *queue = malloc(sizeof(*queue));
 
     if (queue != NULL) {
         queue->head = NULL;
@@ -25,13 +25,13 @@ QUEUE *queue_create(void) {
     return queue;
 }
 
-bool queue_enqueue(QUEUE *queue, ITEM *item) {
-    NODE *new_node;
+bool queue_enqueue(QUEUE *queue, void *data) {
+    QUEUE_NODE *new_node;
 
     if (queue == NULL || item == NULL)
         return false;
 
-    new_node = malloc(sizeof(NODE));
+    new_node = malloc(sizeof(*new_node));
 
     if (new_node == NULL)
         return false;
@@ -52,9 +52,9 @@ bool queue_enqueue(QUEUE *queue, ITEM *item) {
     return true;
 }
 
-ITEM *queue_dequeue(QUEUE *queue) {
-    NODE *removed_node;
-    ITEM *item;
+void *queue_dequeue(QUEUE *queue) {
+    QUEUE_NODE *removed_node;
+    void *item;
 
     if (queue == NULL || queue_is_empty(queue))
         return NULL;
@@ -74,7 +74,7 @@ ITEM *queue_dequeue(QUEUE *queue) {
 }
 
 void queue_destroy(QUEUE **queue) {
-    ITEM *item;
+    void *item;
 
     if (queue == NULL || *queue == NULL)
         return;
@@ -88,45 +88,31 @@ void queue_destroy(QUEUE **queue) {
     *queue = NULL;
 }
 
-ITEM *queue_front(QUEUE *queue) {
+void *queue_front(const QUEUE *queue) {
     if (queue == NULL || queue_is_empty(queue))
         return NULL;
 
     return queue->head->item;
 }
 
-int queue_size(QUEUE *queue) {
+int queue_size(const QUEUE *queue) {
     return queue != NULL ? (int)queue->size : 0;
 }
 
-bool queue_is_empty(QUEUE *queue) {
+bool queue_is_empty(const QUEUE *queue) {
     return queue == NULL || queue->size == 0;
 }
 
-bool queue_is_full(QUEUE *queue) {
-    /*
-     * A dynamic queue has no fixed capacity.
-     * Memory allocation failure is handled by queue_enqueue.
-     */
-    return queue == NULL;
-}
+bool queue_visit(const QUEUE *queue, bool (*visitor)(void *data, void *context), void *context){
+  if(visitor == NULL || queue == NULL)
+    return false;
 
-void queue_print(QUEUE *queue) {
-    NODE *current;
-
-    if (queue == NULL) {
-        printf("Queue does not exist.\n");
-        return;
+    QUEUE_NODE *atual = queue->head;
+    
+    while(atual != NULL){
+      if(!visitor(atual->data, context))
+        break;
+      atual = atual->next;
     }
-
-    printf("head -> ");
-
-    current = queue->head;
-
-    while (current != NULL) {
-        printf("[%d] ", item_get_key(current->item));
-        current = current->next;
-    }
-
-    printf("<- tail\n");
+      
 }

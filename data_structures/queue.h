@@ -3,19 +3,18 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "item.h"
 
 typedef struct queue QUEUE;
-typedef struct queue_node NODE;
 
 QUEUE *queue_create(void);
-bool queue_enqueue(QUEUE *queue, ITEM *item);
-ITEM *queue_dequeue(QUEUE *queue);
-void queue_destroy(QUEUE **queue);
-ITEM *queue_front(QUEUE *queue);
-int queue_size(QUEUE *queue);
-bool queue_is_empty(QUEUE *queue);
-bool queue_is_full(QUEUE *queue);
-void queue_print(QUEUE *queue);
+bool   queue_enqueue(QUEUE *queue, void *data);
+void  *queue_dequeue(QUEUE *queue);
+void   queue_destroy(QUEUE **queue);
+void  *queue_front(const QUEUE *queue);
+size_t queue_size(const QUEUE *queue);
+bool   queue_is_empty(const QUEUE *queue);
+bool   queue_visit(const QUEUE *queue,
+                   bool (*visitor)(void *data, void *context),
+                   void *context);
 
 #endif
