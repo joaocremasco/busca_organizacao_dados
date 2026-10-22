@@ -1,11 +1,12 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "queue.h"
 
-   typedef struct queue_node {
-       void *data;
-       struct queue_node *next;
-   } QUEUE_QUEUE_NODE;
+typedef struct queue_node {
+    void *data;
+    struct queue_node *next;
+} QUEUE_NODE;
 
 struct queue {
     QUEUE_NODE *head;
@@ -16,11 +17,12 @@ struct queue {
 QUEUE *queue_create(void) {
     QUEUE *queue = malloc(sizeof(*queue));
 
-    if (queue != NULL) {
-        queue->head = NULL;
-        queue->tail = NULL;
-        queue->size = 0;
-    }
+    if (queue == NULL)
+        return NULL;
+
+    queue->head = NULL;
+    queue->tail = NULL;
+    queue->size = 0;
 
     return queue;
 }
@@ -28,7 +30,7 @@ QUEUE *queue_create(void) {
 bool queue_enqueue(QUEUE *queue, void *data) {
     QUEUE_NODE *new_node;
 
-    if (queue == NULL || item == NULL)
+    if (queue == NULL || data == NULL)
         return false;
 
     new_node = malloc(sizeof(*new_node));
@@ -36,7 +38,7 @@ bool queue_enqueue(QUEUE *queue, void *data) {
     if (new_node == NULL)
         return false;
 
-    new_node->item = item;
+    new_node->data = data;
     new_node->next = NULL;
 
     if (queue_is_empty(queue)) {
@@ -54,13 +56,13 @@ bool queue_enqueue(QUEUE *queue, void *data) {
 
 void *queue_dequeue(QUEUE *queue) {
     QUEUE_NODE *removed_node;
-    void *item;
+    void *data;
 
     if (queue == NULL || queue_is_empty(queue))
         return NULL;
 
     removed_node = queue->head;
-    item = removed_node->item;
+    data = removed_node->data;
 
     queue->head = removed_node->next;
 
@@ -70,18 +72,16 @@ void *queue_dequeue(QUEUE *queue) {
     if (queue->size == 0)
         queue->tail = NULL;
 
-    return item;
+    return data;
 }
 
 void queue_destroy(QUEUE **queue) {
-    void *item;
-
     if (queue == NULL || *queue == NULL)
         return;
 
     while (!queue_is_empty(*queue)) {
-        item = queue_dequeue(*queue);
-        item_destroy(&item);
+        void *data = queue_dequeue(*queue);
+        item_destroy(&data);
     }
 
     free(*queue);
@@ -92,27 +92,38 @@ void *queue_front(const QUEUE *queue) {
     if (queue == NULL || queue_is_empty(queue))
         return NULL;
 
-    return queue->head->item;
+    return queue->head->data;
 }
 
 int queue_size(const QUEUE *queue) {
-    return queue != NULL ? (int)queue->size : 0;
+    if (queue == NULL)
+        return 0;
+
+    return (int)queue->size;
 }
 
 bool queue_is_empty(const QUEUE *queue) {
     return queue == NULL || queue->size == 0;
 }
 
-bool queue_visit(const QUEUE *queue, bool (*visitor)(void *data, void *context), void *context){
-  if(visitor == NULL || queue == NULL)
-    return false;
+bool queue_visit(
+    const QUEUE *queue,
+    bool (*visitor)(void *data, void *context),
+    void *context
+) {
+    QUEUE_NODE *atual;
 
-    QUEUE_NODE *atual = queue->head;
-    
-    while(atual != NULL){
-      if(!visitor(atual->data, context))
-        break;
-      atual = atual->next;
+    if (queue == NULL || visitor == NULL)
+        return false;
+
+    atual = queue->head;
+
+    while (atual != NULL) {
+        if (!visitor(atual->data, context))
+            return false;
+
+        atual = atual->next;
     }
-      
+
+    return true;
 }

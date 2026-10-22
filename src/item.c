@@ -78,12 +78,11 @@ bool item_set(ITEM *item, const char *name, const char *raw_value){
 
   if(item->count == item->capacity){
     size_t new_cap = item->capacity == 0 ? 4 : item->capacity * 2;
-    FIELD *temp = realloc(item->fields, new_cap * sizeof(FIELD));
+    FIELD *temp = realloc(item->fields, new_cap * sizeof(*temp));
     if(temp == NULL)
       return false;
     item->fields = temp;
     item->capacity = new_cap;
-
   }
 
   char *n = copy_string(name);
