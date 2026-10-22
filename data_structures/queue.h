@@ -2,6 +2,7 @@
 #define QUEUE_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include "item.h"
 
 typedef struct queue QUEUE;

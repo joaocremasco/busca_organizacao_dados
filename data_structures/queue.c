@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include "queue.h"
 
-typedef struct queue_node {
-    void *data;
+struct queue_node {
+    ITEM *item;
     struct queue_node *next;
-} QUEUE_NODE;
+};
 
 struct queue {
-    QUEUE_NODE *head;
-    QUEUE_NODE *tail;
+    NODE *head;
+    NODE *tail;
     size_t size;
 };
 
@@ -32,6 +32,7 @@ bool queue_enqueue(QUEUE *queue, ITEM *item) {
         return false;
 
     new_node = malloc(sizeof(NODE));
+
     if (new_node == NULL)
         return false;
 
@@ -47,6 +48,7 @@ bool queue_enqueue(QUEUE *queue, ITEM *item) {
     }
 
     queue->size++;
+
     return true;
 }
 
@@ -59,6 +61,7 @@ ITEM *queue_dequeue(QUEUE *queue) {
 
     removed_node = queue->head;
     item = removed_node->item;
+
     queue->head = removed_node->next;
 
     free(removed_node);
@@ -103,8 +106,7 @@ bool queue_is_empty(QUEUE *queue) {
 bool queue_is_full(QUEUE *queue) {
     /*
      * A dynamic queue has no fixed capacity.
-     * Allocation failure is detected when attempting
-     * to allocate a new node in queue_enqueue.
+     * Memory allocation failure is handled by queue_enqueue.
      */
     return queue == NULL;
 }
