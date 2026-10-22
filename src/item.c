@@ -18,9 +18,9 @@ struct item_ {
 };
 
 struct item_store {
-    ITEM **items;     /* vetor de ponteiros para itens */
-    size_t count;     /* quantos itens foram registrados */
-    size_t capacity;  /* quantos cabem sem realloc */
+  ITEM **items;     /* vetor de ponteiros para itens */
+  size_t count;     /* quantos itens foram registrados */
+  size_t capacity;  /* quantos cabem sem realloc */
 };
 
 static char *copy_string(const char *s)
@@ -79,7 +79,7 @@ bool item_set(ITEM *item, const char *name, const char *raw_value){
     return false;
 
   if(item->count == item->capacity){
-    int new_cap = item->capacity == 0 ? 4 : item->capacity * 2;
+    size_t new_cap = item->capacity == 0 ? 4 : item->capacity * 2;
     FIELD *temp = realloc(item->fields, new_cap * sizeof(FIELD));
     if(temp == NULL)
       return false;
@@ -141,7 +141,7 @@ bool item_get_number(const ITEM *item, const char *name, double *value){
 
   while (isspace((unsigned char)*fim))
     fim++;
-  
+
   if (*fim != '\0')
     return false;      /* sobrou lixo */
 
@@ -160,6 +160,24 @@ const char *item_field_value(const ITEM *item, size_t index){
   return (item == NULL || index >= item->count) ? NULL : item->fields[index].value;
 }
 
+static bool store_add(ITEM_STORE *store, ITEM *item){
+  if(store == NULL || item == NULL)
+    return false;
+
+  if(store->count == store->capacity){
+    size_t new_cap = store->capacity == 0 ? 4 : store->capacity * 2;
+    ITEM **temp = realloc(store->items, new_cap * sizeof(*temp));
+    if(temp == NULL)
+      return false;
+    store->items = temp;
+    store->capacity = new_cap;
+  }
+  store->items[store->count] = item;
+  store->count++;
+
+  return true;
+}
+
 ITEM_STORE *item_store_create(void){
   ITEM_STORE *store = malloc(sizeof(*store));
   if(store == NULL)
@@ -172,32 +190,24 @@ ITEM_STORE *item_store_create(void){
   return store;
 }
 
-static bool store_add(ITEM_STORE *store, ITEM *item, size_t count){
-  if(store == NULL || item == NULL || count == 0)
-    return false;
-
-  for(int i = 0; i < count; i++){
-    store->items[store->count + i] = item->fields[i];
-  }
-  store->count += count;
-  return true;
-}
-
-void item_store_destroy(ITEM_STORE **store){
-  if(store == NULL || *store == NULL)
+void item_store_destroy(ITEM_STORE **store)
+{
+  if (store == NULL || *store == NULL)
     return;
 
-  int i = 0;
+  for (size_t i = 0; i < (*store)->count; i++) {
+    ITEM *item = (*store)->items[i];
 
-  while((*store)->items[i] != NULL){
-    free((*store)->items[i].name);
-    free((*store)->items[i].value);
-    free((*store)->items[i]);
-    i++;
+    for(size_t j = 0; j < item->count; j++){
+      free(item->fields[j].name);
+      free(item->fields[j].value);
+    }
   }
-
-  free((*store)->items);
-  free(*store);
-  *store == NULL;
+  free(item->fields);
+  free(item);
 }
 
+free((*store)->items);
+free(*store);
+*store = NULL;
+}
