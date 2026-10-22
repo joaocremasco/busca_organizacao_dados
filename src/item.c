@@ -34,8 +34,6 @@ static char *copy_string(const char *s)
 
 ITEM *item_create(ITEM_STORE *store, size_t field_capacity)
 {
-  (void)store; /* só para evitar warning */
-
   ITEM *item = malloc(sizeof(*item));
   if (item == NULL)
     return NULL;
