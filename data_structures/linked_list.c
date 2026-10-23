@@ -147,7 +147,7 @@ void* linked_list_front(LINKED_LIST* list) {
 	return list == NULL ? NULL : list->front;
 }
 
-NODE* find_helper(LINKED_LIST *list, void *object) {
+NODE* find_helper(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL)
 		return NULL;
 	
@@ -155,7 +155,7 @@ NODE* find_helper(LINKED_LIST *list, void *object) {
 	NODE *idx = list->front;
 	
 	for(int i = 0; i < list_size; i++) {
-		if(idx->object == object)
+		if(cmp(idx->object, object))
 			return idx;
 
 		idx = idx->next;
@@ -164,26 +164,28 @@ NODE* find_helper(LINKED_LIST *list, void *object) {
 	return NULL;
 }
 
-bool linked_list_find(LINKED_LIST *list, void *object) {
+void* linked_list_find(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL)
-		return false;
+		return NULL;
 	
-	NODE *res = find_helper(list, object);
+	NODE *res = find_helper(list, object, cmp);
 	
 	if(res == NULL)
-		return false;
+		return NULL;
 		
-	return true;
+	return res->object;
 }
 
-bool linked_list_erase(LINKED_LIST *list, void *object) {
+void* linked_list_erase(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL)
-		return false;
+		return NULL;
 	
-	NODE *idx = find_helper(list, object);
+	NODE *idx = find_helper(list, object, cmp);
 
 	if(idx == NULL)
-		return false;
+		return NULL;
+
+	void *obj = idx->object;
 	
 	if(idx->prev != NULL) {
 		idx->prev->next = idx->next;
@@ -196,10 +198,10 @@ bool linked_list_erase(LINKED_LIST *list, void *object) {
 
 	free(idx);
 
-	return true;
+	return obj;
 }
 
-bool linked_list_insert(LINKED_LIST *list, void *object, void *target) {
+bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || target == NULL)
 		return false;
 		
@@ -209,7 +211,7 @@ bool linked_list_insert(LINKED_LIST *list, void *object, void *target) {
 		return false;
 	}
 
-	NODE *idx = find_helper(list, target);
+	NODE *idx = find_helper(list, target, cmp);
 	
 	if(idx == NULL) {
 		free(node);

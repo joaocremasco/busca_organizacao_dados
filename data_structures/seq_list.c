@@ -114,14 +114,14 @@ void* seq_list_pop_back(SEQ_LIST* sq) {
 	return object;
 }
 
-int seq_list_find(SEQ_LIST *sq, void *object) {
+int seq_list_find(SEQ_LIST *sq, void *object, int (*cmp)(void*, void*)) {
 	if(sq == NULL || object == NULL)
 		return -1;
 	
 	int sq_size = sq->size;
 
 	for(int i = 0; i < sq_size; i++) {
-		if(sq->array[i] == object)
+		if(cmp(sq->array[i], object))
 			return i;
 	}
 
