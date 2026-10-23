@@ -1,15 +1,13 @@
-
 #include "linked_list.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
-typedef struct linked_list_node_ LINKED_LIST_NODE;
+typedef struct linked_list_node LINKED_LIST_NODE;
 
-typedef struct linked_list_node {
+struct linked_list_node {
   void *data;
-  struct linked_list_node *next;
-} LINKED_LIST_NODE;
+  LINKED_LIST_NODE *next;
+};
 
 struct linked_list {
   LINKED_LIST_NODE *start;
@@ -24,18 +22,18 @@ LINKED_LIST *linked_list_create(void) {
 
   list->start = NULL;
   list->end = NULL;
-  list->size_t = 0;
+  list->size = 0;
   return list;
 }
 
-void list_delete(LINKED_LIST **list) {
+void linked_list_destroy(LINKED_LIST **list) {
   if (list == NULL || *list == NULL)
     return;
 
   LINKED_LIST_NODE *p = (*list)->start;
   while (p != NULL) {
     LINKED_LIST_NODE *next = p->next;
-    free(p);
+    free(p);                 /* só o nó, o data é do store */
     p = next;
   }
 
@@ -43,46 +41,35 @@ void list_delete(LINKED_LIST **list) {
   *list = NULL;
 }
 
-bool list_insert(list *list, void *data) {
+bool linked_list_insert(LINKED_LIST *list, void *data) {
   if (list == NULL || data == NULL)
     return false;
 
-  LINKED_LIST_NODE *new = malloc(sizeof(*new));
-  if (new == NULL)
+  LINKED_LIST_NODE *node = malloc(sizeof(*node));
+  if (node == NULL)
     return false;
 
-  new->data = item;
-  new->next = NULL;
+  node->data = data;
+  node->next = NULL;
 
   if (list->start == NULL)
-    list->start = new;
+    list->start = node;
   else
-    list->end->next = new;
+    list->end->next = node;
 
-  list->end = new;
+  list->end = node;
   list->size++;
   return true;
 }
 
-void *linked_list_search(const list *list, int chave) {
-  if (list == NULL)
-    return NULL;
-
-  for (const LINKED_LIST_NODE *p = list->start; p != NULL; p = p->next)
-    if (p->data == chave)
-      return p->data;
-
-  return NULL;
-}
-
-void *linked_list_remove(list *list, void chave) {
+void *linked_list_remove(LINKED_LIST *list, const void *data) {
   if (list == NULL || list->start == NULL)
     return NULL;
 
   LINKED_LIST_NODE *prev = NULL;
   LINKED_LIST_NODE *actual = list->start;
 
-  while (actual != NULL && (actual->data) != data) {
+  while (actual != NULL && actual->data != data) {
     prev = actual;
     actual = actual->next;
   }
@@ -95,26 +82,34 @@ void *linked_list_remove(list *list, void chave) {
   else
     prev->next = actual->next;
 
-  if (actual == list->fim)
-    list->fim = prev;
+  if (actual == list->end)
+    list->end = prev;
 
-  ITEM *item = actual->data;
-  actual->next = NULL;
+  void *item = actual->data;
   free(actual);
   list->size--;
 
-  if (list->tamanho == 0)
-    list->fim = NULL;
-
-  return ;
+  return item;
 }
 
-int list_tamanho(const list *list) {
+size_t linked_list_size(const LINKED_LIST *list) {
   return list != NULL ? list->size : 0;
 }
 
-bool list_is_empty(const list *list) {
-  return list != NULL && list->start == NULL;
+bool linked_list_is_empty(const LINKED_LIST *list) {
+  return list == NULL || list->size == 0;
 }
 
+bool linked_list_visit(const LINKED_LIST *list,
+                       bool (*visitor)(void *data, void *context),
+                       void *context)
+{
+  if (list == NULL || visitor == NULL)
+    return false;
 
+  for (const LINKED_LIST_NODE *p = list->start; p != NULL; p = p->next) {
+    if (!visitor(p->data, context))
+      break;
+  }
+  return true;
+}
