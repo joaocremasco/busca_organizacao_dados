@@ -1,6 +1,13 @@
 #include <stdlib.h>
 #include "stack.h"
 
+typedef struct node_ NODE;
+
+struct node_ {
+	NODE *prev;
+	void* object;
+};
+
 struct stack_ {
 	int size;
 	NODE *top;
@@ -19,35 +26,33 @@ STACK* stack_init() {
 	return st;
 }
 
-void stack_erase(STACK **st) {
+void stack_clear(STACK **st) {
 	if(st == NULL || *st == NULL)
 		return;
 	
 	int stack_size = (*st)->size;
 	
-	NODE *stack_top = (*st)->top;
-	NODE *tmp = NULL;
-	
 	for(int i = 0; i < stack_size; i++) {
-		tmp = node_get_prev(stack_top);
-		
-		node_erase(stack_top);
-
-		stack_top = tmp;
+		stack_pop(*st);	
 	}
 
 	free(*st);
 	*st = NULL;
 }
 
-bool stack_push(STACK *st, OBJECT object) {
-	if(st == NULL || object.content_type == NULL_TYPE)
+bool stack_push(STACK *st, void *object) {
+	if(st == NULL || object == NULL)
 		return false;
 	
-	NODE *node = node_init();
-	node_set_object(node, object);
+	NODE *node = malloc(sizeof(NODE));
+
+	if(node == NULL)
+		return false;
 	
-	node_set_prev(node, st->top);
+	node->object = object;
+	
+	node->prev = st->top;
+	
 	st->top = node;
 
 	st->size++;
@@ -55,32 +60,36 @@ bool stack_push(STACK *st, OBJECT object) {
 	return true;
 }
 
-OBJECT stack_pop(STACK *st) {
+void* stack_pop(STACK *st) {
 	if(st == NULL || st->size == 0) {
-		return (OBJECT) { .content = NULL, .content_type = NULL_TYPE};
+		return NULL;
 	}
 
-	OBJECT object = node_get_object(st->top);
+	void *object = st->top->object;
 	
 	NODE *tmp = st->top;
 
-	st->top = node_get_prev(tmp);
+	st->top = tmp->prev;
 
-	node_erase(tmp);
+	free(tmp);
 
 	st->size--;
 
 	return object;
 }
 
-OBJECT stack_top(STACK *st) {
+void* stack_top(STACK *st) {
 	if(st == NULL || st->size == 0) {
-		return (OBJECT) { .content = NULL, .content_type = NULL_TYPE};
+		return NULL;
 	}
 
-	return node_get_object(st->top);
+	return st->top->object;
 }
 
 int stack_size(STACK *st) {
 	return st == NULL ? -1 : st->size;
+}
+
+bool stack_empty(STACK *st) {
+	return st == NULL ? true : st->size == 0;
 }

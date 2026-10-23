@@ -2,15 +2,15 @@
 #define STACK_H
 
 #include <stdbool.h>
-#include "node.h"
 
 typedef struct stack_ STACK;
 
 STACK* stack_init();
-void stack_erase(STACK **st);
-bool stack_push(STACK *st, OBJECT object);
-OBJECT stack_pop(STACK *st);
-OBJECT stack_top(STACK *st);
+void stack_clear(STACK **st);
+bool stack_push(STACK *st, void *object);
+void* stack_pop(STACK *st);
+void* stack_top(STACK *st);
 int stack_size(STACK *st);
+bool stack_empty(STACK *st);
 
 #endif

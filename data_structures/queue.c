@@ -1,129 +1,108 @@
-
-#include <stdio.h>
 #include <stdlib.h>
 #include "queue.h"
 
-typedef struct queue_node {
-    void *data;
-    struct queue_node *next;
-} QUEUE_NODE;
+typedef struct node_ NODE;
 
-struct queue {
-    QUEUE_NODE *head;
-    QUEUE_NODE *tail;
-    size_t size;
+struct node_ {
+	NODE *next;
+	NODE *prev;
+	void *object;
 };
 
-QUEUE *queue_create(void) {
-    QUEUE *queue = malloc(sizeof(*queue));
+struct queue_ {
+	int size;
+	NODE *front;
+	NODE *back;
+};
 
-    if (queue == NULL)
-        return NULL;
+QUEUE* queue_init() {
+	
+	QUEUE *q = malloc(sizeof(QUEUE));
+	
+	if(q == NULL)
+		return NULL;
 
-    queue->head = NULL;
-    queue->tail = NULL;
-    queue->size = 0;
+	q->size = 0;
+	q->front = NULL;
+	q->back = NULL;
+	
+	return q;
+};
 
-    return queue;
+void queue_clear(QUEUE **q) {
+	if(q == NULL || *q == NULL)
+		return;
+	
+	int queue_size = (*q)->size;
+
+	for(int i = 0; i < queue_size; i++) {
+		queue_pop(*q);
+	}
+
+	free(*q);
+	*q = NULL;
 }
 
-bool queue_enqueue(QUEUE *queue, void *data) {
-    QUEUE_NODE *new_node;
+bool queue_push(QUEUE *q, void *object) {
+	if(q == NULL || object == NULL) {
+		return false;
+	}
 
-    if (queue == NULL || data == NULL)
-        return false;
+	NODE *node = malloc(sizeof(NODE));
 
-    new_node = malloc(sizeof(*new_node));
+	if(node == NULL)
+		return false;
+	
+	node->object = object;
+	node->prev = q->back;
+	node->next = NULL;
 
-    if (new_node == NULL)
-        return false;
+	if(q->size == 0) {
+		q->front = node;
+	}
+	else { 
+		q->back->next = node;
+	}
 
-    new_node->data = data;
-    new_node->next = NULL;
+	q->back = node;
+	
+	q->size++;
 
-    if (queue_is_empty(queue)) {
-        queue->head = new_node;
-        queue->tail = new_node;
-    } else {
-        queue->tail->next = new_node;
-        queue->tail = new_node;
-    }
-
-    queue->size++;
-
-    return true;
+	return true;
 }
 
-void *queue_dequeue(QUEUE *queue) {
-    QUEUE_NODE *removed_node;
-    void *data;
+void* queue_pop(QUEUE *q) {
+	if(q == NULL)
+		return NULL;
 
-    if (queue == NULL || queue_is_empty(queue))
-        return NULL;
+	void *object = q->front->object;
+	
+	NODE *tmp = q->front;
+	
+	if(q->front->next != NULL)
+		q->front->next->prev = NULL;
+	
+	q->front = q->front->next;
 
-    removed_node = queue->head;
-    data = removed_node->data;
+	free(tmp);
 
-    queue->head = removed_node->next;
+	q->size--;
 
-    free(removed_node);
-    queue->size--;
-
-    if (queue->size == 0)
-        queue->tail = NULL;
-
-    return data;
+	return object;
 }
 
-void queue_destroy(QUEUE **queue) {
-    if (queue == NULL || *queue == NULL)
-        return;
-
-    while (!queue_is_empty(*queue)) {
-        void *data = queue_dequeue(*queue);
-        item_destroy(&data);
-    }
-
-    free(*queue);
-    *queue = NULL;
+void* queue_front(QUEUE *q) {
+	return q == NULL ? NULL : q->front;
 }
 
-void *queue_front(const QUEUE *queue) {
-    if (queue == NULL || queue_is_empty(queue))
-        return NULL;
-
-    return queue->head->data;
+void* queue_back(QUEUE *q) {
+	return q == NULL ? NULL : q->back;
 }
 
-int queue_size(const QUEUE *queue) {
-    if (queue == NULL)
-        return 0;
-
-    return (int)queue->size;
+int queue_size(QUEUE *q) {
+	return q == NULL ? -1 : q->size;
 }
 
-bool queue_is_empty(const QUEUE *queue) {
-    return queue == NULL || queue->size == 0;
-}
-
-bool queue_visit(
-    const QUEUE *queue,
-    bool (*visitor)(void *data, void *context),
-    void *context
-) {
-    QUEUE_NODE *atual;
-
-    if (queue == NULL || visitor == NULL)
-        return false;
-
-    atual = queue->head;
-
-    while (atual != NULL) {
-        if (!visitor(atual->data, context))
-            return false;
-
-        atual = atual->next;
-    }
-
-    return true;
+bool queue_empty(QUEUE *q) {
+	return q == NULL ? true : q->size == 0;
 }
