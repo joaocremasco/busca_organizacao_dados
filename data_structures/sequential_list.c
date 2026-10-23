@@ -9,7 +9,7 @@ struct sequential_list{
   size_t capacity; 
 };
 
-SEQ_LIST *list_create(void){
+SEQ_LIST *seq_list_create(void){
   SEQ_LIST *list = malloc(sizeof(*list));
 
   if(list == NULL)
@@ -22,19 +22,17 @@ SEQ_LIST *list_create(void){
   return list;
 }
 
-void list_delete(SEQ_LIST **list){
-  if(list == NULL || *list == NULL)
+void seq_list_destroy(SEQ_LIST **list)
+{
+  if (list == NULL || *list == NULL)
     return;
-  
-  while((list)->){
-    free((*list)->data[(*list)->size - 1];
-    (*list)->size--;
-  }
+
+  free((*list)->data);   /* o vetor de ponteiros; os itens ficam */
   free(*list);
-  *list == NULL;
+  *list = NULL;
 }
 
-bool list_insert(SEQ_LIST *list, void *data){
+bool seq_list_insert(SEQ_LIST *list, void *data){
   if(list == NULL)
     return false;
 
@@ -51,5 +49,24 @@ bool list_insert(SEQ_LIST *list, void *data){
   list->size++;
   return true;
 }
-size_t list_size(const SEQ_LIST *list);
-bool list_is_empty(const SEQ_LIST *list);
+size_t seq_list_size(const SEQ_LIST *list){
+  if(list == NULL)
+    return 0;
+
+  return list->size;
+}
+
+bool seq_list_is_empty(const SEQ_LIST *list){
+  return list == NULL || list->size == 0;
+}
+
+bool seq_list_visit(const SEQ_LIST *list,
+                    bool (*visitor)(void *data, void *context),
+                    void *context){
+  for (size_t i = 0; i < list->size; i++) {
+    if (!visitor(list->data[i], context))
+      break;
+  }
+}
+
+

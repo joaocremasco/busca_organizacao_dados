@@ -95,11 +95,11 @@ void *queue_front(const QUEUE *queue) {
     return queue->head->data;
 }
 
-int queue_size(const QUEUE *queue) {
+size_t queue_size(const QUEUE *queue) {
     if (queue == NULL)
         return 0;
 
-    return (int)queue->size;
+    return queue->size;
 }
 
 bool queue_is_empty(const QUEUE *queue) {
