@@ -186,7 +186,7 @@ void* dn_linked_list_erase(DN_LINKED_LIST *list, void *object, int (*cmp)(void*,
 	return NULL;
 }
 
-bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target) {
+bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || target == NULL)
 		return false;
 		
@@ -202,7 +202,7 @@ bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target) {
 	NODE *prev = list->front;
 
 	for(int i = 0; i < list_size; i++) {
-		if(idx->object == target) {
+		if(cmp(idx->object, target)) {
 			prev->next = node;
 			node->next = idx;
 			
