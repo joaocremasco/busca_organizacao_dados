@@ -1,59 +1,75 @@
 #include <stdlib.h>
 #include "stack.h"
 
-typedef struct node_ NODE;
-
-struct node_ {
-	NODE *prev;
-	void* object;
-};
+#define STARTING_CAPACITY 8
 
 struct stack_ {
 	int size;
-	NODE *top;
+	int cap;
+	void **array;
+	void (*destroy)(void*);
 };
 
-STACK* stack_init() {
-	
+STACK* stack_init(void (*destroy)(void*)) {
+	if(destroy == NULL)
+		return NULL;
+
 	STACK *st = malloc(sizeof(STACK));
 	
 	if(st == NULL)
 		return NULL;
 	
 	st->size = 0;
-	st->top = NULL;
+	st->cap = STARTING_CAPACITY;
+	st->array = malloc(STARTING_CAPACITY * sizeof(void*));
+	st->destroy = destroy;
+	
+	if(st->array == NULL) {
+		free(st);
+		return NULL;
+	}
 
 	return st;
 }
 
-void stack_clear(STACK **st) {
+void stack_destroy(STACK **st) {
 	if(st == NULL || *st == NULL)
 		return;
+		
+	int st_size = (*st)->size;
 	
-	int stack_size = (*st)->size;
-	
-	for(int i = 0; i < stack_size; i++) {
-		stack_pop(*st);	
-	}
+	for(int i = 0; i < st_size; i++)
+		(*st)->destroy(stack_pop(*st));
 
+	free((*st)->array);
 	free(*st);
 	*st = NULL;
+}
+
+static bool stack_resize(STACK *st, int capacity) {
+	if(st == NULL || capacity <= 0)
+		return false;
+	
+	void **tmp = realloc(st->array, capacity * sizeof(void*));
+
+	if(tmp == NULL)
+		return false;
+
+	st->array = tmp;
+	st->cap = capacity;
+
+	return true;
 }
 
 bool stack_push(STACK *st, void *object) {
 	if(st == NULL || object == NULL)
 		return false;
 	
-	NODE *node = malloc(sizeof(NODE));
+	if(st->size == st->cap)
+		if(!stack_resize(st, st->cap * 2))
+			return false;
 
-	if(node == NULL)
-		return false;
-	
-	node->object = object;
-	
-	node->prev = st->top;
-	
-	st->top = node;
+	st->array[st->size] = object;
 
 	st->size++;
 	
@@ -65,17 +81,9 @@ void* stack_pop(STACK *st) {
 		return NULL;
 	}
 
-	void *object = st->top->object;
-	
-	NODE *tmp = st->top;
-
-	st->top = tmp->prev;
-
-	free(tmp);
-
 	st->size--;
 
-	return object;
+	return st->array[st->size];
 }
 
 void* stack_top(STACK *st) {
@@ -83,11 +91,11 @@ void* stack_top(STACK *st) {
 		return NULL;
 	}
 
-	return st->top->object;
+	return st->array[st->size - 1];
 }
 
 int stack_size(STACK *st) {
-	return st == NULL ? -1 : st->size;
+	return st == NULL ? 0 : st->size;
 }
 
 bool stack_empty(STACK *st) {

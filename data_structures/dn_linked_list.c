@@ -12,9 +12,10 @@ struct dn_linked_list_ {
 	int size;
 	NODE *front;
 	NODE *back;
+	void (*destroy)(void*);
 };
 
-DN_LINKED_LIST* dn_linked_list_init() {
+DN_LINKED_LIST* dn_linked_list_init(void (*destroy)(void*)) {
 	
 	DN_LINKED_LIST *list = malloc(sizeof(DN_LINKED_LIST));
 	
@@ -34,20 +35,22 @@ DN_LINKED_LIST* dn_linked_list_init() {
 	list->size = 0;
 	list->front = dummy;
 	list->back = dummy;
+	list->destroy = destroy;
 
 	return list;
 }
 
-void dn_linked_list_clear(DN_LINKED_LIST **list) {
+void dn_linked_list_destroy(DN_LINKED_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
-
+	
 	int list_size = (*list)->size;
 
 	for(int i = 0; i < list_size; i++) {
-		dn_linked_list_pop_back(*list);
+		(*list)->destroy(dn_linked_list_pop_front(*list));
 	}
 
+	free((*list)->front);
 	free(*list);
 	*list = NULL;
 }
@@ -100,11 +103,14 @@ void* dn_linked_list_pop_back(DN_LINKED_LIST *list) {
 }
 
 void* dn_linked_list_back(DN_LINKED_LIST *list) {
-	return list == NULL || list->size == 0 ? NULL : list->back;
+	if(list == NULL || list->size == 0)
+		return NULL;
+
+	return list->back->object;
 }
 
 bool dn_linked_list_push_front(DN_LINKED_LIST *list, void *object) {
-	if(list == NULL)
+	if(list == NULL || object == NULL)
 		return false;
 	
 	NODE *node = malloc(sizeof(NODE));
@@ -116,6 +122,9 @@ bool dn_linked_list_push_front(DN_LINKED_LIST *list, void *object) {
 	node->next = list->front->next;
 	
 	list->front->next = node;
+
+	if(list->size == 0)
+		list->back = node;
 	
 	list->size++;
 	
@@ -126,11 +135,14 @@ void* dn_linked_list_pop_front(DN_LINKED_LIST* list) {
 	if(list == NULL || list->size == 0)
 		return NULL;
 
-	void *object = list->front->object;
+	void *object = list->front->next->object;
 	
 	NODE *tmp = list->front->next;
 
 	list->front->next = tmp->next;
+
+	if(tmp == list->back)
+		list->back = list->front;
 
 	free(tmp);
 
@@ -140,18 +152,21 @@ void* dn_linked_list_pop_front(DN_LINKED_LIST* list) {
 }
 
 void* dn_linked_list_front(DN_LINKED_LIST* list) {
-	return list == NULL || list->size == 0 ? NULL : list->front->next;
+	if(list == NULL || list->size == 0)
+		return NULL;
+
+	return list->front->next->object;
 }
 
 void* dn_linked_list_find(DN_LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
 	
 	int list_size = list->size;
 	NODE *idx = list->front->next;
 	
 	for(int i = 0; i < list_size; i++) {
-		if(cmp(idx->object, object))
+		if(cmp(idx->object, object) == 0)
 			return idx->object;
 
 		idx = idx->next;
@@ -161,7 +176,7 @@ void* dn_linked_list_find(DN_LINKED_LIST *list, void *object, int (*cmp)(void*, 
 }
 
 void* dn_linked_list_erase(DN_LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
 	
 	int list_size = list->size;
@@ -170,12 +185,18 @@ void* dn_linked_list_erase(DN_LINKED_LIST *list, void *object, int (*cmp)(void*,
 	NODE *prev = list->front;
 
 	for(int i = 0; i < list_size; i++) {
-		if(cmp(idx->object, object)) {
+		if(cmp(idx->object, object) == 0) {
 			void* obj = idx->object;
 			
 			prev->next = idx->next;
-			free(idx);
+
+
+			if(idx == list->back)
+				list->back = prev;
 			
+			free(idx);
+			list->size--;
+
 			return obj;
 		}
 		
@@ -187,7 +208,7 @@ void* dn_linked_list_erase(DN_LINKED_LIST *list, void *object, int (*cmp)(void*,
 }
 
 bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL || target == NULL)
+	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
 		return false;
 		
 	NODE *node = malloc(sizeof(NODE));
@@ -196,15 +217,19 @@ bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target, int
 		return false;
 	}
 
+	node->object = object;
+
 	int list_size = list->size;
 	
 	NODE *idx = list->front->next;
 	NODE *prev = list->front;
 
 	for(int i = 0; i < list_size; i++) {
-		if(cmp(idx->object, target)) {
+		if(cmp(idx->object, target) == 0) {
 			prev->next = node;
 			node->next = idx;
+
+			list->size++;
 			
 			return true;
 		}
@@ -216,6 +241,28 @@ bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target, int
 	free(node);
 	
 	return false;
+}
+
+void* dn_linked_list_set(DN_LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
+	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
+		return NULL;
+		
+	int list_size = list->size;
+	
+	NODE *idx = list->front->next;
+
+	for(int i = 0; i < list_size; i++) {
+		if(cmp(idx->object, target) == 0) {
+			void *obj = idx->object;
+			idx->object = object;
+			
+			return obj;
+		}
+		
+		idx = idx->next;
+	}
+
+	return NULL;
 }
 
 int dn_linked_list_size(DN_LINKED_LIST *list) {

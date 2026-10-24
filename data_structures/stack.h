@@ -5,11 +5,13 @@
 
 typedef struct stack_ STACK;
 
-STACK* stack_init();
-void stack_clear(STACK **st);
+STACK* stack_init(void (*destroy)(void*));
+void stack_destroy(STACK **st);
+
 bool stack_push(STACK *st, void *object);
 void* stack_pop(STACK *st);
 void* stack_top(STACK *st);
+
 int stack_size(STACK *st);
 bool stack_empty(STACK *st);
 

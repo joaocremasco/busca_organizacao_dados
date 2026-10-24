@@ -7,10 +7,14 @@ struct ord_list_ {
 	int size;
 	int capacity;
 	void **array;
+	void (*destroy)(void*);
+	int (*cmp)(void*, void*);
 };
 
-ORD_LIST* ord_list_init() {
-	
+ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*)) {
+	if(destroy == NULL || cmp == NULL)
+		return NULL;
+
 	ORD_LIST* sq = malloc(sizeof(ORD_LIST));
 	
 	if(sq == NULL)
@@ -19,6 +23,8 @@ ORD_LIST* ord_list_init() {
 	sq->size = 0;
 	sq->capacity = STARTING_CAPACITY;
 	sq->array = malloc(sizeof(void*) * STARTING_CAPACITY);
+	sq->destroy = destroy;
+	sq->cmp = cmp;
 
 	if(sq->array == NULL) {
 		free(sq);
@@ -28,9 +34,15 @@ ORD_LIST* ord_list_init() {
 	return sq;
 }
 
-void ord_list_clear(ORD_LIST **sq) {
+void ord_list_destroy(ORD_LIST **sq) {
 	if(sq == NULL || *sq == NULL)
 		return;
+	
+	int sq_size = (*sq)->size;
+	
+	for(int i = 0; i < sq_size; i++) {
+		(*sq)->destroy((*sq)->array[i]);
+	}
 
 	free((*sq)->array);
 
@@ -39,14 +51,21 @@ void ord_list_clear(ORD_LIST **sq) {
 }
 
 bool ord_list_resize(ORD_LIST *sq, int capacity) {
-	if(sq == NULL || capacity < 0)
+	if(sq == NULL || capacity <= 0)
 		return false;
 	
+	if(capacity < sq->size) {
+		for(int i = capacity; i < sq->size; i++) {
+			sq->destroy(sq->array[i]);
+		}
+		sq->size = capacity;
+	}
+
 	void **tmp_array = realloc(sq->array, capacity * sizeof(void*));
 		
 	if(tmp_array == NULL)
 		return false;
-	
+
 	sq->array = tmp_array;
 
 	sq->capacity = capacity;
@@ -54,7 +73,7 @@ bool ord_list_resize(ORD_LIST *sq, int capacity) {
 	return true;
 }
 
-int ord_list_lower_bound(ORD_LIST *sq, void *object, int (*cmp)(void*, void*)) {
+int ord_list_lower_bound(ORD_LIST *sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return -1;
 	
@@ -64,11 +83,11 @@ int ord_list_lower_bound(ORD_LIST *sq, void *object, int (*cmp)(void*, void*)) {
 
 		int mid = low + (high - low)/2;
 		
-		// 00 = a < b | 01 a == b | 10 a > b
+		// -1 = a < b | 0 a == b | 1 a > b
 		
-		int res = cmp(sq->array[mid], object);
+		int res = sq->cmp(sq->array[mid], object);
 
-		if(res == 0) {
+		if(res < 0) {
 			low = mid + 1;
 		}
 		else {
@@ -79,7 +98,7 @@ int ord_list_lower_bound(ORD_LIST *sq, void *object, int (*cmp)(void*, void*)) {
 	return low;
 }
 
-int ord_list_upper_bound(ORD_LIST *sq, void *object, int (*cmp)(void*, void*)) {
+int ord_list_upper_bound(ORD_LIST *sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return -1;
 	
@@ -89,11 +108,11 @@ int ord_list_upper_bound(ORD_LIST *sq, void *object, int (*cmp)(void*, void*)) {
 
 		int mid = low + (high - low)/2;
 		
-		// 00 = a < b | 01 a == b | 10 a > b
+		// -1 = a < b | 0 a == b | 1 a > b
 		
-		int res = cmp(sq->array[mid], object);
+		int res = sq->cmp(sq->array[mid], object);
 
-		if(res == 2) {
+		if(res > 0) {
 			high = mid;
 		}
 		else {
@@ -104,35 +123,22 @@ int ord_list_upper_bound(ORD_LIST *sq, void *object, int (*cmp)(void*, void*)) {
 	return low;
 }
 
-int ord_list_find(ORD_LIST *sq, void *object, int (*cmp)(void*, void*)) {
+int ord_list_find(ORD_LIST *sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return -1;
 	
-	int low = 0, high = sq->size - 1;
+	int idx = ord_list_lower_bound(sq, object);
 	
-	while(low <= high) {
+	if(idx == sq->size)
+		return -1;
 
-		int mid = low + (high - low)/2;
-		
-		// 00 = a < b | 01 a == b | 10 a > b
-		
-		int res = cmp(sq->array[mid], object);
-
-		if(res == 1) {
-			return mid;
-		}
-		else if(res == 0) {
-			low = mid + 1;
-		}
-		else {
-			high = mid - 1;	
-		}
-	}
+	if(sq->cmp(ord_list_get(sq, idx), object) == 0)
+		return idx;
 
 	return -1;
 }
 
-bool ord_list_insert(ORD_LIST* sq, void *object, int (*cmp)(void*, void*)) {
+bool ord_list_insert(ORD_LIST* sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return false;
 
@@ -141,24 +147,26 @@ bool ord_list_insert(ORD_LIST* sq, void *object, int (*cmp)(void*, void*)) {
 			return false;
 	}
 	
-	int idx = ord_list_upper_bound(sq, object, cmp);
+	int idx = ord_list_upper_bound(sq, object);
 
-	int seq_size = ++sq->size;
+	int seq_size = sq->size;
 
-	for(int i = idx + 1; i < seq_size; i++) {
+	for(int i = seq_size; i > idx; i--) {
 		sq->array[i] = sq->array[i - 1];
 	}
+
+	sq->size++;
 
 	sq->array[idx] = object;
 
 	return true;
 }
 
-void* ord_list_erase(ORD_LIST* sq, void *object, int (*cmp)(void*, void*)) {
+void* ord_list_erase(ORD_LIST* sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return NULL;
 	
-	int idx = ord_list_find(sq, object, cmp);
+	int idx = ord_list_find(sq, object);
 
 	if(idx == -1)
 		return NULL;
