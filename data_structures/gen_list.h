@@ -16,17 +16,22 @@ bool gen_list_push_front(GEN_LIST* list, void *object, bool atom);
 void* gen_list_pop_front(GEN_LIST* list, bool *isAtom);
 void* gen_list_front(GEN_LIST *list, bool *isAtom);
 
-void* gen_list_find(GEN_LIST *list, void *target, int (*cmp)(void*, void*), bool *isAtom);
-void* gen_list_erase(GEN_LIST *list, void *target, int (*cmp)(void*, void*), bool *isAtom);
-bool gen_list_insert(GEN_LIST *list, void *object, bool atom, void *target, int (*cmp)(void*, void*));
-void* gen_list_set(GEN_LIST *list, void *object, bool atom, void *target, int (*cmp)(void*, void*), bool *isAtom);
+void* gen_list_find(GEN_LIST *list, void *object, 
+		bool atom, int (*cmp)(void*, void*), bool *isAtom);
+
+void* gen_list_erase(GEN_LIST *list, void *object, 
+		bool atom, int (*cmp)(void*, void*), bool *isAtom);
+
+void* gen_list_set(GEN_LIST *list, void *object, 
+		bool obj_atom, void *target, bool targ_atom, int (*cmp)(void*, void*), bool *isAtom);
+
+bool gen_list_insert(GEN_LIST *list, void *object, 
+		bool obj_atom, void *target, bool targ_atom, int (*cmp)(void*, void*));
 
 int gen_list_size(GEN_LIST *list);
 bool gen_list_empty(GEN_LIST *list);
-/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
-   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
-bool gen_list_visit(const GEN_LIST *list,
-                    bool (*visitor)(void *data, void *context),
-                    void *context);
+
+bool gen_list_visit(GEN_LIST *list, 
+		bool (*visitor)(void *object, void *context), void *context);
 
 #endif

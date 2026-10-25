@@ -12,12 +12,10 @@ bool stack_push(STACK *st, void *object);
 void* stack_pop(STACK *st);
 void* stack_top(STACK *st);
 
+bool stack_resize(STACK *st, int capacity);
 int stack_size(STACK *st);
 bool stack_empty(STACK *st);
-/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
-   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
-bool stack_visit(const STACK *st,
-                 bool (*visitor)(void *data, void *context),
-                 void *context);
+
+bool stack_visit(const STACK *st, bool (*visitor)(void *object, void *context), void *context);
 
 #endif

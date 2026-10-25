@@ -16,8 +16,6 @@ struct queue_ {
 };
 
 QUEUE* queue_init(void (*destroy)(void*)) {
-	if(destroy == NULL)
-		return NULL;
 
 	QUEUE *q = malloc(sizeof(QUEUE));
 	
@@ -39,7 +37,10 @@ void queue_destroy(QUEUE **q) {
 	int q_size = (*q)->size;
 
 	for(int i = 0; i < q_size; i++) {
-		(*q)->destroy(queue_pop(*q));
+		void *obj = queue_pop(*q);
+		
+		if((*q)->destroy != NULL)
+			(*q)->destroy(obj);
 	}
 
 	free(*q);
@@ -115,9 +116,7 @@ bool queue_empty(QUEUE *q) {
 	return q == NULL ? true : q->size == 0;
 }
 
-bool queue_visit(const QUEUE *q,
-                 bool (*visitor)(void *data, void *context),
-                 void *context) {
+bool queue_visit(const QUEUE *q, bool (*visitor)(void *data, void *context), void *context) {
 	if(q == NULL || visitor == NULL)
 		return false;
 

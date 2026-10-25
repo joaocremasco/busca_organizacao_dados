@@ -172,9 +172,7 @@ bool seq_list_empty(SEQ_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
 
-bool seq_list_visit(const SEQ_LIST *sq,
-                    bool (*visitor)(void *data, void *context),
-                    void *context) {
+bool seq_list_visit(const SEQ_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
 	if(sq == NULL || visitor == NULL)
 		return false;
 

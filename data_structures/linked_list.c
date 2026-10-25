@@ -17,8 +17,6 @@ struct linked_list_ {
 };
 
 LINKED_LIST* linked_list_init(void (*destroy)(void*)) {
-	if(destroy == NULL)
-		return NULL;
 
 	LINKED_LIST *list = malloc(sizeof(LINKED_LIST));
 	
@@ -37,10 +35,10 @@ void linked_list_destroy(LINKED_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
 
-	int list_size = (*list)->size;
-
-	for(int i = 0; i < list_size; i++) {
-		(*list)->destroy(linked_list_pop_back(*list));
+	while((*list)->size > 0) {
+		void *obj = linked_list_pop_back(*list);
+		if((*list)->destroy != NULL)
+			(*list)->destroy(obj);
 	}
 
 	free(*list);
@@ -282,9 +280,7 @@ bool linked_list_empty(LINKED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
 
-bool linked_list_visit(const LINKED_LIST *list,
-                       bool (*visitor)(void *data, void *context),
-                       void *context) {
+bool linked_list_visit(const LINKED_LIST *list, bool (*visitor)(void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL)
 		return false;
 

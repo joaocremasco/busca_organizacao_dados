@@ -11,8 +11,6 @@ struct stack_ {
 };
 
 STACK* stack_init(void (*destroy)(void*)) {
-	if(destroy == NULL)
-		return NULL;
 
 	STACK *st = malloc(sizeof(STACK));
 	
@@ -38,18 +36,29 @@ void stack_destroy(STACK **st) {
 		
 	int st_size = (*st)->size;
 	
-	for(int i = 0; i < st_size; i++)
-		(*st)->destroy(stack_pop(*st));
+	if((*st)->destroy != NULL) {
+		for(int i = 0; i < st_size; i++)
+			(*st)->destroy(stack_pop(*st));
+	}
 
 	free((*st)->array);
 	free(*st);
 	*st = NULL;
 }
 
-static bool stack_resize(STACK *st, int capacity) {
+bool stack_resize(STACK *st, int capacity) {
 	if(st == NULL || capacity <= 0)
 		return false;
 	
+	if(capacity < st->size) {
+		if(st->destroy != NULL) {
+			for(int i = capacity; i < st->size; i++) {
+				st->destroy(st->array[i]);
+			}
+		}
+		st->size = capacity;
+	}
+
 	void **tmp = realloc(st->array, capacity * sizeof(void*));
 
 	if(tmp == NULL)
@@ -65,9 +74,10 @@ bool stack_push(STACK *st, void *object) {
 	if(st == NULL || object == NULL)
 		return false;
 	
-	if(st->size == st->cap)
+	if(st->size == st->cap) {
 		if(!stack_resize(st, st->cap * 2))
 			return false;
+	}
 
 	st->array[st->size] = object;
 
@@ -102,9 +112,7 @@ bool stack_empty(STACK *st) {
 	return st == NULL ? true : st->size == 0;
 }
 
-bool stack_visit(const STACK *st,
-                 bool (*visitor)(void *data, void *context),
-                 void *context) {
+bool stack_visit(const STACK *st, bool (*visitor)(void *object, void *context), void *context) {
 	if(st == NULL || visitor == NULL)
 		return false;
 

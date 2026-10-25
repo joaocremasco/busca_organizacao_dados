@@ -21,10 +21,8 @@ int ord_list_lower_bound(ORD_LIST *sq, void *target);
 
 int ord_list_size(ORD_LIST *sq);
 bool ord_list_empty(ORD_LIST *sq);
-/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
-   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
-bool ord_list_visit(const ORD_LIST *sq,
-                    bool (*visitor)(void *data, void *context),
-                    void *context);
+
+bool ord_list_visit(const ORD_LIST *sq, 
+		bool (*visitor)(void *object, void *context), void *context);
 
 #endif

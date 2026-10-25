@@ -24,9 +24,6 @@ struct crossed_list_ {
 
 CROSSED_LIST* crossed_list_init(void (*destroy)(void*)) {
 
-	if(destroy == NULL)
-		return NULL;
-
 	CROSSED_LIST *list = malloc(sizeof(CROSSED_LIST));
 
 	if(list == NULL)
@@ -46,7 +43,7 @@ static NODE* crossed_list_iterate_right(CROSSED_LIST *list, int i, int j) {
 	NODE *prev = NULL;
 	NODE *idx = list->rows[i];
 
-	while(idx != NULL && idx->j < j) {
+	while(idx != NULL && idx->j <= j) {
 		prev = idx;
 		idx = idx->right;
 	}
@@ -59,7 +56,7 @@ static NODE* crossed_list_iterate_down(CROSSED_LIST *list, int i, int j) {
 	NODE *prev = NULL;
 	NODE *idx = list->columns[j];
 
-	while(idx != NULL && idx->i < i) {
+	while(idx != NULL && idx->i <= i) {
 		prev = idx;
 		idx = idx->down;
 	}
@@ -120,7 +117,7 @@ static bool crossed_list_erase_tail(CROSSED_LIST *list, NODE *node, bool isRow) 
 
 		tmp = isRow ? idx->right : idx->down;
 
-		if(idx->object != NULL)
+		if(list->destroy != NULL && idx->object != NULL)
 			list->destroy(idx->object);
 
 		crossed_list_unlink(list, idx);
@@ -218,20 +215,12 @@ bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow) {
 }
 
 
-void* crossed_list_set(CROSSED_LIST *list, int i, int j, void *object) {
+bool crossed_list_insert(CROSSED_LIST *list, int i, int j, void *object) {
 	if(list == NULL || object == NULL || i < 0 || i >= list->row_cap || j < 0 || j >= list->col_cap)
-		return NULL;
+		return false;
 
 	NODE *left = crossed_list_iterate_right(list, i, j);
 	NODE *right = left != NULL ? left->right : list->rows[i];
-
-	if(right != NULL && right->j == j) {
-		void *old = right->object;
-
-		right->object = object;
-
-		return old;
-	}
 
 	NODE *up = crossed_list_iterate_down(list, i, j);
 	NODE *down = up != NULL ? up->down : list->columns[j];
@@ -239,7 +228,7 @@ void* crossed_list_set(CROSSED_LIST *list, int i, int j, void *object) {
 	NODE *node = malloc(sizeof(NODE));
 
 	if(node == NULL)
-		return NULL;
+		return false;
 
 	node->i = i;
 	node->j = j;
@@ -274,7 +263,7 @@ void* crossed_list_set(CROSSED_LIST *list, int i, int j, void *object) {
 
 	list->size++;
 
-	return NULL;
+	return true;
 }
 
 void* crossed_list_get(CROSSED_LIST *list, int i, int j) {
@@ -361,15 +350,39 @@ bool crossed_list_empty(CROSSED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
 
-bool crossed_list_visit(const CROSSED_LIST *list,
-                        bool (*visitor)(void *data, void *context),
-                        void *context) {
+bool crossed_list_visit(CROSSED_LIST *list, bool (*visitor)(int i, int j, void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL)
 		return false;
 
 	for(int i = 0; i < list->row_cap; i++) {
 		for(NODE *node = list->rows[i]; node != NULL; node = node->right) {
-			if(!visitor(node->object, context))
+			if(!visitor(node->i, node->j, node->object, context))
+				return false;
+		}
+	}
+
+	return true;
+}
+
+bool crossed_list_visit_line(CROSSED_LIST *list, int index, bool isRow, bool (*visitor)(int i, int j, void *object, void *context), void *context) {
+	if(list == NULL || visitor == NULL || index < 0)
+		return false;
+
+	if(isRow) {
+		if(index >= list->row_cap)
+			return false;
+
+		for(NODE *node = list->rows[index]; node != NULL; node = node->right) {
+			if(!visitor(node->i, node->j, node->object, context))
+				return false;
+		}
+	}
+	else {
+		if(index >= list->col_cap)
+			return false;
+
+		for(NODE *node = list->columns[index]; node != NULL; node = node->down) {
+			if(!visitor(node->i, node->j, node->object, context))
 				return false;
 		}
 	}

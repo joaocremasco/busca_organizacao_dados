@@ -12,7 +12,7 @@ struct ord_list_ {
 };
 
 ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*)) {
-	if(destroy == NULL || cmp == NULL)
+	if(cmp == NULL)
 		return NULL;
 
 	ORD_LIST* sq = malloc(sizeof(ORD_LIST));
@@ -40,8 +40,10 @@ void ord_list_destroy(ORD_LIST **sq) {
 	
 	int sq_size = (*sq)->size;
 	
-	for(int i = 0; i < sq_size; i++) {
-		(*sq)->destroy((*sq)->array[i]);
+	if((*sq)->destroy != NULL) {
+		for(int i = 0; i < sq_size; i++) {
+			(*sq)->destroy((*sq)->array[i]);
+		}
 	}
 
 	free((*sq)->array);
@@ -55,8 +57,10 @@ bool ord_list_resize(ORD_LIST *sq, int capacity) {
 		return false;
 	
 	if(capacity < sq->size) {
-		for(int i = capacity; i < sq->size; i++) {
-			sq->destroy(sq->array[i]);
+		if(sq->destroy != NULL) {
+			for(int i = capacity; i < sq->size; i++) {
+				sq->destroy(sq->array[i]);
+			}
 		}
 		sq->size = capacity;
 	}
@@ -199,9 +203,7 @@ bool ord_list_empty(ORD_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
 
-bool ord_list_visit(const ORD_LIST *sq,
-                    bool (*visitor)(void *data, void *context),
-                    void *context) {
+bool ord_list_visit(const ORD_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
 	if(sq == NULL || visitor == NULL)
 		return false;
 

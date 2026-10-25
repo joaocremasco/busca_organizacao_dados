@@ -44,10 +44,10 @@ void dn_linked_list_destroy(DN_LINKED_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
 	
-	int list_size = (*list)->size;
-
-	for(int i = 0; i < list_size; i++) {
-		(*list)->destroy(dn_linked_list_pop_front(*list));
+	while((*list)->size > 0) {
+		void *obj = dn_linked_list_pop_front(*list);
+		if((*list)->destroy != NULL)
+			(*list)->destroy(obj);
 	}
 
 	free((*list)->front);
@@ -273,9 +273,7 @@ bool dn_linked_list_empty(DN_LINKED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
 
-bool dn_linked_list_visit(const DN_LINKED_LIST *list,
-                          bool (*visitor)(void *data, void *context),
-                          void *context) {
+bool dn_linked_list_visit(DN_LINKED_LIST *list, bool (*visitor)(void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL)
 		return false;
 
