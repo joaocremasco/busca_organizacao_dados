@@ -13,10 +13,13 @@ struct linked_list_ {
 	int size;
 	NODE *front;
 	NODE *back;
+	void (*destroy)(void*);
 };
 
-LINKED_LIST* linked_list_init() {
-	
+LINKED_LIST* linked_list_init(void (*destroy)(void*)) {
+	if(destroy == NULL)
+		return NULL;
+
 	LINKED_LIST *list = malloc(sizeof(LINKED_LIST));
 	
 	if(list == NULL)
@@ -25,18 +28,19 @@ LINKED_LIST* linked_list_init() {
 	list->size = 0;
 	list->front = NULL;
 	list->back = NULL;
+	list->destroy = destroy;
 
 	return list;
 }
 
-void linked_list_clear(LINKED_LIST **list) {
+void linked_list_destroy(LINKED_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
 
 	int list_size = (*list)->size;
 
 	for(int i = 0; i < list_size; i++) {
-		linked_list_pop_back(*list);
+		(*list)->destroy(linked_list_pop_back(*list));
 	}
 
 	free(*list);
@@ -83,6 +87,9 @@ void* linked_list_pop_back(LINKED_LIST *list) {
 		tmp->prev->next = NULL;
 	
 	list->back = tmp->prev;
+
+	if(list->back == NULL)
+		list->front = NULL;
 	
 	free(tmp);
 
@@ -92,11 +99,14 @@ void* linked_list_pop_back(LINKED_LIST *list) {
 }
 
 void* linked_list_back(LINKED_LIST *list) {
-	return list == NULL ? NULL : list->back;
+	if(list == NULL)
+		return NULL;
+
+	return list->size == 0 ? NULL : list->back->object;
 }
 
 bool linked_list_push_front(LINKED_LIST *list, void *object) {
-	if(list == NULL)
+	if(list == NULL || object == NULL)
 		return false;
 	
 	NODE *node = malloc(sizeof(NODE));
@@ -136,6 +146,9 @@ void* linked_list_pop_front(LINKED_LIST* list) {
 
 	list->front = list->front->next;
 
+	if(list->front == NULL)
+		list->back = NULL;
+
 	free(tmp);
 
 	list->size--;
@@ -144,18 +157,21 @@ void* linked_list_pop_front(LINKED_LIST* list) {
 }
 
 void* linked_list_front(LINKED_LIST* list) {
-	return list == NULL ? NULL : list->front;
+	if(list == NULL)
+		return NULL;
+
+	return list->size == 0 ? NULL : list->front->object;
 }
 
-NODE* find_helper(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+static NODE* find_helper(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
+	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
 	
 	int list_size = list->size;
 	NODE *idx = list->front;
 	
 	for(int i = 0; i < list_size; i++) {
-		if(cmp(idx->object, object))
+		if(cmp(idx->object, object) == 0)
 			return idx;
 
 		idx = idx->next;
@@ -165,7 +181,7 @@ NODE* find_helper(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 }
 
 void* linked_list_find(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
 	
 	NODE *res = find_helper(list, object, cmp);
@@ -177,7 +193,7 @@ void* linked_list_find(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)
 }
 
 void* linked_list_erase(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
 	
 	NODE *idx = find_helper(list, object, cmp);
@@ -190,8 +206,14 @@ void* linked_list_erase(LINKED_LIST *list, void *object, int (*cmp)(void*, void*
 	if(idx->prev != NULL) {
 		idx->prev->next = idx->next;
 	}
+	else {
+		list->front = idx->next;
+	}
 	if(idx->next != NULL) {
 		idx->next->prev = idx->prev;
+	}
+	else {
+		list->back = idx->prev;
 	}
 		
 	list->size--;
@@ -201,20 +223,36 @@ void* linked_list_erase(LINKED_LIST *list, void *object, int (*cmp)(void*, void*
 	return obj;
 }
 
-bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL || target == NULL)
-		return false;
+void* linked_list_set(LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
+	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
+		return NULL;
 		
-	NODE *node = malloc(sizeof(NODE));
-
-	if(node == NULL) {
-		return false;
-	}
-
 	NODE *idx = find_helper(list, target, cmp);
 	
 	if(idx == NULL) {
-		free(node);
+		return NULL;
+	}
+
+	void* old = idx->object;
+
+	idx->object = object;
+
+	return old;
+}
+
+bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
+	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
+		return false;
+		
+	NODE *idx = find_helper(list, target, cmp);
+	
+	if(idx == NULL) {
+		return false;
+	}
+
+	NODE *node = malloc(sizeof(NODE));
+
+	if(node == NULL) {
 		return false;
 	}
 
@@ -222,7 +260,16 @@ bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp
 	
 	node->next = idx;
 	node->prev = idx->prev;
+	
+	if(idx->prev != NULL)
+		idx->prev->next = node;
+	else {
+		list->front = node;
+	}
+
 	idx->prev = node;
+	
+	list->size++;
 
 	return true;
 }

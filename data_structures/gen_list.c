@@ -14,10 +14,18 @@ struct gen_list_ {
 	int size;
 	NODE *front;
 	NODE *back;
+	void (*destroy)(void*);
 };
 
-GEN_LIST* gen_list_init() {
-	
+static void set_atom(bool *ptr, bool v) {
+    if(ptr != NULL)
+        *ptr = v;
+}
+
+GEN_LIST* gen_list_init(void (*destroy)(void*)) {
+	if(destroy == NULL)
+		return NULL;
+
 	GEN_LIST *list = malloc(sizeof(GEN_LIST));
 	
 	if(list == NULL)
@@ -26,26 +34,27 @@ GEN_LIST* gen_list_init() {
 	list->size = 0;
 	list->front = NULL;
 	list->back = NULL;
+	list->destroy = destroy;
 
 	return list;
 }
 
-void gen_list_clear(void *l) {
-	
-	GEN_LIST **list = l;
-
+void gen_list_destroy(GEN_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
 
-	int list_size = (*list)->size;
+    while((*list)->size > 0) {
+        bool atom;
+        void *obj = gen_list_pop_back(*list, &atom);
 
-	for(int i = 0; i < list_size; i++) {
-		if(!(*list)->back->atom) {
-			gen_list_clear(&(*list)->back->object);
-		}
-
-		gen_list_pop_back(*list);
-	}
+        if(atom) {
+            (*list)->destroy(obj);
+        }
+        else {
+            GEN_LIST *sub = obj;
+            gen_list_destroy(&sub);
+        }
+    }
 
 	free(*list);
 	*list = NULL;
@@ -80,11 +89,14 @@ bool gen_list_push_back(GEN_LIST *list, void *object, bool atom) {
 	return true;
 }
 
-void* gen_list_pop_back(GEN_LIST *list) {
-	if(list == NULL || list->size == 0)
+void* gen_list_pop_back(GEN_LIST *list, bool *isAtom) {
+	if(list == NULL || list->size == 0) {
+		set_atom(isAtom, false);
 		return NULL;
+	}
 	
 	void *object = list->back->object;
+	set_atom(isAtom, list->back->atom);
 	
 	NODE *tmp = list->back;
 	
@@ -92,20 +104,29 @@ void* gen_list_pop_back(GEN_LIST *list) {
 		tmp->prev->next = NULL;
 	
 	list->back = tmp->prev;
+
+	if(list->back == NULL)
+		list->front = NULL;
 	
 	free(tmp);
 
 	list->size--;
-
+	
 	return object;
 }
 
-void* gen_list_back(GEN_LIST *list) {
-	return list == NULL ? NULL : list->back;
+void* gen_list_back(GEN_LIST *list, bool *isAtom) {
+	if(list == NULL || list->size == 0) {
+		set_atom(isAtom, false);
+		return NULL;
+	}
+	
+	set_atom(isAtom, list->back->atom);
+	return list->back->object;
 }
 
 bool gen_list_push_front(GEN_LIST *list, void *object, bool atom) {
-	if(list == NULL)
+	if(list == NULL || object == NULL)
 		return false;
 	
 	NODE *node = malloc(sizeof(NODE));
@@ -133,18 +154,24 @@ bool gen_list_push_front(GEN_LIST *list, void *object, bool atom) {
 	return true;
 }
 
-void* gen_list_pop_front(GEN_LIST* list) {
-	if(list == NULL || list->size == 0)
+void* gen_list_pop_front(GEN_LIST* list, bool *isAtom) {
+	if(list == NULL || list->size == 0) {
+		set_atom(isAtom, false);
 		return NULL;
+	}
 
 	void *object = list->front->object;
-	
+	set_atom(isAtom, list->front->atom);
+
 	NODE *tmp = list->front;
 
 	if(tmp->next != NULL)
 		tmp->next->prev = NULL;
 
 	list->front = list->front->next;
+
+	if(list->front == NULL)
+		list->back = NULL;
 
 	free(tmp);
 
@@ -153,20 +180,28 @@ void* gen_list_pop_front(GEN_LIST* list) {
 	return object;
 }
 
-void* gen_list_front(GEN_LIST* list) {
-	return list == NULL ? NULL : list->front;
+void* gen_list_front(GEN_LIST* list, bool *isAtom) {
+	if(list == NULL || list->size == 0) {
+		set_atom(isAtom, false);
+		return NULL;
+	}
+	
+	set_atom(isAtom, list->front->atom);
+	return list->front->object;
 }
 
-NODE* find_helper(GEN_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+static NODE* find_helper(GEN_LIST *list, void *object, int (*cmp)(void*, void*)) {
+	if(list == NULL || object == NULL || cmp == NULL) {
 		return NULL;
-	
+	}
+
 	int list_size = list->size;
 	NODE *idx = list->front;
 	
 	for(int i = 0; i < list_size; i++) {
-		if(cmp(idx->object, object))
+		if(idx->atom && cmp(idx->object, object) == 0) {
 			return idx;
+		}
 
 		idx = idx->next;
 	}
@@ -174,21 +209,27 @@ NODE* find_helper(GEN_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	return NULL;
 }
 
-void* gen_list_find(GEN_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+void* gen_list_find(GEN_LIST *list, void *object, int (*cmp)(void*, void*), bool *isAtom) {
+	if(list == NULL || object == NULL || cmp == NULL) {
+		set_atom(isAtom, false);
 		return NULL;
-	
+	}
+
 	NODE *res = find_helper(list, object, cmp);
 	
 	if(res == NULL)
 		return NULL;
-		
+	
+	set_atom(isAtom, res->atom);
+
 	return res->object;
 }
 
-void* gen_list_erase(GEN_LIST *list, void *object, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL)
+void* gen_list_erase(GEN_LIST *list, void *object, int (*cmp)(void*, void*), bool *isAtom) {
+	if(list == NULL || object == NULL || cmp == NULL) {
+		set_atom(isAtom, false);
 		return NULL;
+	}
 	
 	NODE *idx = find_helper(list, object, cmp);
 
@@ -200,11 +241,19 @@ void* gen_list_erase(GEN_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(idx->prev != NULL) {
 		idx->prev->next = idx->next;
 	}
+	else {
+		list->front = idx->next;
+	}
 	if(idx->next != NULL) {
 		idx->next->prev = idx->prev;
 	}
+	else {
+		list->back = idx->prev;
+	}
 		
 	list->size--;
+	
+	set_atom(isAtom, idx->atom);
 
 	free(idx);
 
@@ -212,19 +261,18 @@ void* gen_list_erase(GEN_LIST *list, void *object, int (*cmp)(void*, void*)) {
 }
 
 bool gen_list_insert(GEN_LIST *list, void *object, bool atom, void *target, int (*cmp)(void*, void*)) {
-	if(list == NULL || object == NULL || target == NULL)
+	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
 		return false;
 		
-	NODE *node = malloc(sizeof(NODE));
-
-	if(node == NULL) {
-		return false;
-	}
-
 	NODE *idx = find_helper(list, target, cmp);
 	
 	if(idx == NULL) {
-		free(node);
+		return false;
+	}
+
+	NODE *node = malloc(sizeof(NODE));
+
+	if(node == NULL) {
 		return false;
 	}
 
@@ -233,13 +281,42 @@ bool gen_list_insert(GEN_LIST *list, void *object, bool atom, void *target, int 
 	
 	node->next = idx;
 	node->prev = idx->prev;
+
+	if(idx->prev != NULL)
+		idx->prev->next = node;
+	else
+		list->front = node;
+
 	idx->prev = node;
+	
+	list->size++;
 
 	return true;
 }
 
+void* gen_list_set(GEN_LIST *list, void *object, bool atom, void *target, int (*cmp)(void*, void*), bool *isAtom) {
+	if(list == NULL || object == NULL || target == NULL || cmp == NULL) {
+		set_atom(isAtom, false);
+		return NULL;
+	}
+		
+	NODE *idx = find_helper(list, target, cmp);
+	
+	if(idx == NULL) {
+		return NULL;
+	}
+	
+	void *obj = idx->object;
+	set_atom(isAtom, idx->atom);
+
+	idx->object = object;
+	idx->atom = atom;
+
+	return obj;
+}
+
 int gen_list_size(GEN_LIST *list) {
-	return list == NULL ? 0 : list->size;
+	return list == NULL ? -1 : list->size;
 }
 
 bool gen_list_empty(GEN_LIST *list) {

@@ -5,7 +5,6 @@ typedef struct node_ NODE;
 
 struct node_ {
 	NODE *next;
-	NODE *prev;
 	void *object;
 };
 
@@ -13,10 +12,13 @@ struct queue_ {
 	int size;
 	NODE *front;
 	NODE *back;
+	void (*destroy)(void*);
 };
 
-QUEUE* queue_init() {
-	
+QUEUE* queue_init(void (*destroy)(void*)) {
+	if(destroy == NULL)
+		return NULL;
+
 	QUEUE *q = malloc(sizeof(QUEUE));
 	
 	if(q == NULL)
@@ -25,18 +27,19 @@ QUEUE* queue_init() {
 	q->size = 0;
 	q->front = NULL;
 	q->back = NULL;
+	q->destroy = destroy;
 	
 	return q;
-};
+}
 
-void queue_clear(QUEUE **q) {
+void queue_destroy(QUEUE **q) {
 	if(q == NULL || *q == NULL)
 		return;
 	
-	int queue_size = (*q)->size;
+	int q_size = (*q)->size;
 
-	for(int i = 0; i < queue_size; i++) {
-		queue_pop(*q);
+	for(int i = 0; i < q_size; i++) {
+		(*q)->destroy(queue_pop(*q));
 	}
 
 	free(*q);
@@ -54,7 +57,6 @@ bool queue_push(QUEUE *q, void *object) {
 		return false;
 	
 	node->object = object;
-	node->prev = q->back;
 	node->next = NULL;
 
 	if(q->size == 0) {
@@ -72,17 +74,17 @@ bool queue_push(QUEUE *q, void *object) {
 }
 
 void* queue_pop(QUEUE *q) {
-	if(q == NULL)
+	if(q == NULL || q->size == 0)
 		return NULL;
 
 	void *object = q->front->object;
 	
 	NODE *tmp = q->front;
 	
-	if(q->front->next != NULL)
-		q->front->next->prev = NULL;
-	
 	q->front = q->front->next;
+
+	if(q->front == NULL)
+		q->back = NULL;
 
 	free(tmp);
 
@@ -92,15 +94,21 @@ void* queue_pop(QUEUE *q) {
 }
 
 void* queue_front(QUEUE *q) {
-	return q == NULL ? NULL : q->front;
+	if(q == NULL)
+		return NULL;
+
+	return q->size == 0 ? NULL : q->front->object;
 }
 
 void* queue_back(QUEUE *q) {
-	return q == NULL ? NULL : q->back;
+	if(q == NULL)
+		return NULL;
+
+	return q->size == 0 ? NULL : q->back->object;
 }
 
 int queue_size(QUEUE *q) {
-	return q == NULL ? -1 : q->size;
+	return q == NULL ? 0 : q->size;
 }
 
 bool queue_empty(QUEUE *q) {
