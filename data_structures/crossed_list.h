@@ -18,5 +18,8 @@ bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow);
 int crossed_list_size(CROSSED_LIST *list);
 int crossed_list_capacity(CROSSED_LIST *list, bool isRow);
 bool crossed_list_empty(CROSSED_LIST *list);
+bool crossed_list_visit(const CROSSED_LIST *list,
+                        bool (*visitor)(void *data, void *context),
+                        void *context);
 
 #endif
