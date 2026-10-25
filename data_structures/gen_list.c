@@ -330,8 +330,14 @@ bool gen_list_visit(const GEN_LIST *list,
 		return false;
 
 	for(NODE *node = list->front; node != NULL; node = node->next) {
-		if(!visitor(node->object, context))
+		if(node->atom) {
+			if(!visitor(node->object, context))
+				return false;
+		}
+		else if(node->object != NULL &&
+		        !gen_list_visit((GEN_LIST *)node->object, visitor, context)) {
 			return false;
+		}
 	}
 
 	return true;

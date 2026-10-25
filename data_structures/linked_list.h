@@ -23,6 +23,8 @@ bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp
 
 int linked_list_size(LINKED_LIST *list);
 bool linked_list_empty(LINKED_LIST *list);
+/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
+   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
 bool linked_list_visit(const LINKED_LIST *list,
                        bool (*visitor)(void *data, void *context),
                        void *context);

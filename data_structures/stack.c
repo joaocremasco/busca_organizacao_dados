@@ -108,8 +108,8 @@ bool stack_visit(const STACK *st,
 	if(st == NULL || visitor == NULL)
 		return false;
 
-	for(NODE *node = st->top; node != NULL; node = node->prev) {
-		if(!visitor(node->object, context))
+	for(int i = st->size - 1; i >= 0; i--) {
+		if(!visitor(st->array[i], context))
 			return false;
 	}
 

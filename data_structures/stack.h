@@ -14,6 +14,8 @@ void* stack_top(STACK *st);
 
 int stack_size(STACK *st);
 bool stack_empty(STACK *st);
+/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
+   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
 bool stack_visit(const STACK *st,
                  bool (*visitor)(void *data, void *context),
                  void *context);

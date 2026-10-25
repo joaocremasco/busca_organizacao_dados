@@ -15,6 +15,8 @@ void* queue_back(QUEUE *q);
 
 int queue_size(QUEUE *q);
 bool queue_empty(QUEUE *q);
+/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
+   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
 bool queue_visit(const QUEUE *q,
                  bool (*visitor)(void *data, void *context),
                  void *context);

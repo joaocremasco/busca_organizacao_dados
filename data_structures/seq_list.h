@@ -21,6 +21,8 @@ int seq_list_find(SEQ_LIST *sq, void *object, int (*cmp)(void*, void*));
 
 int seq_list_size(SEQ_LIST *sq);
 bool seq_list_empty(SEQ_LIST *sq);
+/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
+   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
 bool seq_list_visit(const SEQ_LIST *sq,
                     bool (*visitor)(void *data, void *context),
                     void *context);
