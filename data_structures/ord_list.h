@@ -22,7 +22,7 @@ int ord_list_lower_bound(ORD_LIST *sq, void *target);
 int ord_list_size(ORD_LIST *sq);
 bool ord_list_empty(ORD_LIST *sq);
 
-bool ord_list_visit(const ORD_LIST *sq, 
+bool ord_list_visit(ORD_LIST *sq, 
 		bool (*visitor)(void *object, void *context), void *context);
 
 #endif

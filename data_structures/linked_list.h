@@ -31,7 +31,7 @@ bool linked_list_insert(LINKED_LIST *list, void *object,
 int linked_list_size(LINKED_LIST *list);
 bool linked_list_empty(LINKED_LIST *list);
 
-bool linked_list_visit(const LINKED_LIST *list, 
+bool linked_list_visit(LINKED_LIST *list, 
 		bool (*visitor)(void *object, void *context), void *context);
 
 #endif

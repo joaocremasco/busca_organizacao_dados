@@ -11,8 +11,6 @@ struct seq_list_ {
 };
 
 SEQ_LIST* seq_list_init(void (*destroy)(void*)) {
-	if(destroy == NULL)
-		return NULL;
 
 	SEQ_LIST* sq = malloc(sizeof(SEQ_LIST));
 	
@@ -37,9 +35,11 @@ void seq_list_destroy(SEQ_LIST **sq) {
 		return;
 	
 	int sq_size = (*sq)->size;
-
-	for(int i = 0; i < sq_size; i++)
-		(*sq)->destroy(seq_list_get(*sq, i));
+	
+	if((*sq)->destroy != NULL) {
+		for(int i = 0; i < sq_size; i++)
+			(*sq)->destroy((*sq)->array[i]);
+	}
 
 	free((*sq)->array);
 
@@ -52,8 +52,10 @@ bool seq_list_resize(SEQ_LIST *sq, int capacity) {
 		return false;
 	
 	if(capacity < sq->size) {
-		for(int i = capacity; i < sq->size; i++)
-			sq->destroy(sq->array[i]);
+		if(sq->destroy != NULL) {
+			for(int i = capacity; i < sq->size; i++)
+				sq->destroy(sq->array[i]);
+		}
 
 		sq->size = capacity;
 	}
@@ -172,7 +174,7 @@ bool seq_list_empty(SEQ_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
 
-bool seq_list_visit(const SEQ_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
+bool seq_list_visit(SEQ_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
 	if(sq == NULL || visitor == NULL)
 		return false;
 

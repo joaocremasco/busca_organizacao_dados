@@ -116,7 +116,7 @@ bool queue_empty(QUEUE *q) {
 	return q == NULL ? true : q->size == 0;
 }
 
-bool queue_visit(const QUEUE *q, bool (*visitor)(void *data, void *context), void *context) {
+bool queue_visit(QUEUE *q, bool (*visitor)(void *object, void *context), void *context) {
 	if(q == NULL || visitor == NULL)
 		return false;
 

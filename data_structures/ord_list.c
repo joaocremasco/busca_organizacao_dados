@@ -203,7 +203,7 @@ bool ord_list_empty(ORD_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
 
-bool ord_list_visit(const ORD_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
+bool ord_list_visit(ORD_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
 	if(sq == NULL || visitor == NULL)
 		return false;
 

@@ -12,10 +12,9 @@ bool stack_push(STACK *st, void *object);
 void* stack_pop(STACK *st);
 void* stack_top(STACK *st);
 
-bool stack_resize(STACK *st, int capacity);
 int stack_size(STACK *st);
 bool stack_empty(STACK *st);
 
-bool stack_visit(const STACK *st, bool (*visitor)(void *object, void *context), void *context);
+bool stack_visit(STACK *st, bool (*visitor)(void *object, void *context), void *context);
 
 #endif

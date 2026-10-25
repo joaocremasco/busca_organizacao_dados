@@ -46,7 +46,7 @@ void stack_destroy(STACK **st) {
 	*st = NULL;
 }
 
-bool stack_resize(STACK *st, int capacity) {
+static bool stack_resize(STACK *st, int capacity) {
 	if(st == NULL || capacity <= 0)
 		return false;
 	
@@ -112,7 +112,7 @@ bool stack_empty(STACK *st) {
 	return st == NULL ? true : st->size == 0;
 }
 
-bool stack_visit(const STACK *st, bool (*visitor)(void *object, void *context), void *context) {
+bool stack_visit(STACK *st, bool (*visitor)(void *object, void *context), void *context) {
 	if(st == NULL || visitor == NULL)
 		return false;
 

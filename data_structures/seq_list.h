@@ -22,6 +22,6 @@ int seq_list_find(SEQ_LIST *sq, void *object, int (*cmp)(void*, void*));
 int seq_list_size(SEQ_LIST *sq);
 bool seq_list_empty(SEQ_LIST *sq);
 
-bool seq_list_visit(const SEQ_LIST *sq, bool (*visitor)(void *object, void *context), void *context);
+bool seq_list_visit(SEQ_LIST *sq, bool (*visitor)(void *object, void *context), void *context);
 
 #endif

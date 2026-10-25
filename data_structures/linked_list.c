@@ -280,7 +280,7 @@ bool linked_list_empty(LINKED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
 
-bool linked_list_visit(const LINKED_LIST *list, bool (*visitor)(void *object, void *context), void *context) {
+bool linked_list_visit(LINKED_LIST *list, bool (*visitor)(void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL)
 		return false;
 

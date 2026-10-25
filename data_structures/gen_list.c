@@ -41,20 +41,20 @@ void gen_list_destroy(GEN_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
 
-    while((*list)->size > 0) {
+	while((*list)->size > 0) {
 		bool atom;
 		void *obj = gen_list_pop_back(*list, &atom);
 
-        if(atom) {
+		if(atom) {
 			if((*list)->destroy != NULL) {
 				(*list)->destroy(obj);
 			}
-        }
-        else {
+		}
+		else {
 			GEN_LIST *sub = obj;
 			gen_list_destroy(&sub);
-        }
-    }
+		}
+	}
 
 	free(*list);
 	*list = NULL;
