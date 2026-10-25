@@ -198,3 +198,17 @@ int ord_list_size(ORD_LIST *sq) {
 bool ord_list_empty(ORD_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
+
+bool ord_list_visit(const ORD_LIST *sq,
+                    bool (*visitor)(void *data, void *context),
+                    void *context) {
+	if(sq == NULL || visitor == NULL)
+		return false;
+
+	for(int i = 0; i < sq->size; i++) {
+		if(!visitor(sq->array[i], context))
+			return false;
+	}
+
+	return true;
+}

@@ -360,3 +360,19 @@ int crossed_list_capacity(CROSSED_LIST *list, bool isRow) {
 bool crossed_list_empty(CROSSED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
+
+bool crossed_list_visit(const CROSSED_LIST *list,
+                        bool (*visitor)(void *data, void *context),
+                        void *context) {
+	if(list == NULL || visitor == NULL)
+		return false;
+
+	for(int i = 0; i < list->row_cap; i++) {
+		for(NODE *node = list->rows[i]; node != NULL; node = node->right) {
+			if(!visitor(node->object, context))
+				return false;
+		}
+	}
+
+	return true;
+}

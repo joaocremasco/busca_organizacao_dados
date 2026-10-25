@@ -101,3 +101,17 @@ int stack_size(STACK *st) {
 bool stack_empty(STACK *st) {
 	return st == NULL ? true : st->size == 0;
 }
+
+bool stack_visit(const STACK *st,
+                 bool (*visitor)(void *data, void *context),
+                 void *context) {
+	if(st == NULL || visitor == NULL)
+		return false;
+
+	for(int i = st->size - 1; i >= 0; i--) {
+		if(!visitor(st->array[i], context))
+			return false;
+	}
+
+	return true;
+}

@@ -114,3 +114,17 @@ int queue_size(QUEUE *q) {
 bool queue_empty(QUEUE *q) {
 	return q == NULL ? true : q->size == 0;
 }
+
+bool queue_visit(const QUEUE *q,
+                 bool (*visitor)(void *data, void *context),
+                 void *context) {
+	if(q == NULL || visitor == NULL)
+		return false;
+
+	for(NODE *node = q->front; node != NULL; node = node->next) {
+		if(!visitor(node->object, context))
+			return false;
+	}
+
+	return true;
+}

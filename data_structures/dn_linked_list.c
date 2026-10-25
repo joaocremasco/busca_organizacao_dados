@@ -272,3 +272,17 @@ int dn_linked_list_size(DN_LINKED_LIST *list) {
 bool dn_linked_list_empty(DN_LINKED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
+
+bool dn_linked_list_visit(const DN_LINKED_LIST *list,
+                          bool (*visitor)(void *data, void *context),
+                          void *context) {
+	if(list == NULL || visitor == NULL)
+		return false;
+
+	for(NODE *node = list->front->next; node != NULL; node = node->next) {
+		if(!visitor(node->object, context))
+			return false;
+	}
+
+	return true;
+}

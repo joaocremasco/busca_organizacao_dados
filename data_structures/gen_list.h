@@ -23,5 +23,10 @@ void* gen_list_set(GEN_LIST *list, void *object, bool atom, void *target, int (*
 
 int gen_list_size(GEN_LIST *list);
 bool gen_list_empty(GEN_LIST *list);
+/* Percorre na ordem natural. true = percorreu tudo; false = o visitor
+   pediu para parar ou argumento invalido. Nao aloca nem libera nada. */
+bool gen_list_visit(const GEN_LIST *list,
+                    bool (*visitor)(void *data, void *context),
+                    void *context);
 
 #endif

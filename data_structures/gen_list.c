@@ -322,3 +322,23 @@ int gen_list_size(GEN_LIST *list) {
 bool gen_list_empty(GEN_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
+
+bool gen_list_visit(const GEN_LIST *list,
+                    bool (*visitor)(void *data, void *context),
+                    void *context) {
+	if(list == NULL || visitor == NULL)
+		return false;
+
+	for(NODE *node = list->front; node != NULL; node = node->next) {
+		if(node->atom) {
+			if(!visitor(node->object, context))
+				return false;
+		}
+		else if(node->object != NULL &&
+		        !gen_list_visit((GEN_LIST *)node->object, visitor, context)) {
+			return false;
+		}
+	}
+
+	return true;
+}
