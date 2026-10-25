@@ -22,5 +22,8 @@ bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target, int
 
 int dn_linked_list_size(DN_LINKED_LIST *list);
 bool dn_linked_list_empty(DN_LINKED_LIST *list);
+bool dn_linked_list_visit(const DN_LINKED_LIST *list,
+                          bool (*visitor)(void *data, void *context),
+                          void *context);
 
 #endif

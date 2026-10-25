@@ -12,5 +12,8 @@ void* stack_pop(STACK *st);
 void* stack_top(STACK *st);
 int stack_size(STACK *st);
 bool stack_empty(STACK *st);
+bool stack_visit(const STACK *st,
+                 bool (*visitor)(void *data, void *context),
+                 void *context);
 
 #endif

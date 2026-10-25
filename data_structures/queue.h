@@ -13,5 +13,8 @@ void* queue_front(QUEUE *q);
 void* queue_back(QUEUE *q);
 int queue_size(QUEUE *q);
 bool queue_empty(QUEUE *q);
+bool queue_visit(const QUEUE *q,
+                 bool (*visitor)(void *data, void *context),
+                 void *context);
 
 #endif

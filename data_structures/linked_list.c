@@ -234,3 +234,17 @@ int linked_list_size(LINKED_LIST *list) {
 bool linked_list_empty(LINKED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
+
+bool linked_list_visit(const LINKED_LIST *list,
+                       bool (*visitor)(void *data, void *context),
+                       void *context) {
+	if(list == NULL || visitor == NULL)
+		return false;
+
+	for(NODE *node = list->front; node != NULL; node = node->next) {
+		if(!visitor(node->object, context))
+			return false;
+	}
+
+	return true;
+}

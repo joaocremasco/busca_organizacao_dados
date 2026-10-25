@@ -93,3 +93,17 @@ int stack_size(STACK *st) {
 bool stack_empty(STACK *st) {
 	return st == NULL ? true : st->size == 0;
 }
+
+bool stack_visit(const STACK *st,
+                 bool (*visitor)(void *data, void *context),
+                 void *context) {
+	if(st == NULL || visitor == NULL)
+		return false;
+
+	for(NODE *node = st->top; node != NULL; node = node->prev) {
+		if(!visitor(node->object, context))
+			return false;
+	}
+
+	return true;
+}

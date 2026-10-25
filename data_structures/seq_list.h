@@ -16,5 +16,8 @@ void* seq_list_get(SEQ_LIST *sq, int idx);
 int seq_list_find(SEQ_LIST *sq, void *object, int (*cmp)(void*, void*));
 int seq_list_size(SEQ_LIST *sq);
 bool seq_list_empty(SEQ_LIST *sq);
+bool seq_list_visit(const SEQ_LIST *sq,
+                    bool (*visitor)(void *data, void *context),
+                    void *context);
 
 #endif

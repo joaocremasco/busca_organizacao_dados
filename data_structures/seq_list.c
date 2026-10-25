@@ -142,3 +142,17 @@ int seq_list_size(SEQ_LIST *sq) {
 bool seq_list_empty(SEQ_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
+
+bool seq_list_visit(const SEQ_LIST *sq,
+                    bool (*visitor)(void *data, void *context),
+                    void *context) {
+	if(sq == NULL || visitor == NULL)
+		return false;
+
+	for(int i = 0; i < sq->size; i++) {
+		if(!visitor(sq->array[i], context))
+			return false;
+	}
+
+	return true;
+}

@@ -22,5 +22,8 @@ bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp
 
 int linked_list_size(LINKED_LIST *list);
 bool linked_list_empty(LINKED_LIST *list);
+bool linked_list_visit(const LINKED_LIST *list,
+                       bool (*visitor)(void *data, void *context),
+                       void *context);
 
 #endif
