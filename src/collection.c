@@ -11,6 +11,7 @@
 #include "data_structures/linked_list.h"
 #include "data_structures/gen_list.h"
 #include "data_structures/dn_linked_list.h"
+#include "data_structures/crossed_list.h"
 
 typedef enum {
   COLLECTION_STACK,
@@ -247,16 +248,68 @@ size_t collection_size(const COLLECTION *collection) {
   }
 }
 
+typedef struct {
+  COLLECTION_VISITOR visitor;
+  void *context;
+} COLLECTION_VISIT_CONTEXT;
+
+static bool collection_cross_visit_adapter(int i, int j, void *item, void *context);
+
 bool collection_visit(const COLLECTION *collection,
                       COLLECTION_VISITOR visitor,
                       void *context){
+  if (collection == NULL || visitor == NULL)
+    return false;
 
+  switch (collection->type) {
+    case COLLECTION_STACK:
+      return stack_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+    case COLLECTION_QUEUE:
+      return queue_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+    case COLLECTION_ARRAY_LIST:
+      return seq_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+    case COLLECTION_LINKED_LIST:
+      return linked_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+    case COLLECTION_SENTINEL_LIST:
+      return dn_linked_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+    case COLLECTION_SORTED_LIST:
+      return ord_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+    case COLLECTION_CROSS_LIST: {
+      COLLECTION_VISIT_CONTEXT visit_context = {visitor, context};
+      return crossed_list_visit(collection->impl, collection_cross_visit_adapter,
+                                &visit_context);
+    }
+    case COLLECTION_GROUPED_LIST:
+    default:
+      return false;
+  }
+}
+
+static bool collection_cross_visit_adapter(int i, int j, void *item, void *context) {
+  (void)i;
+  (void)j;
+  COLLECTION_VISITOR visitor = ((COLLECTION_VISIT_CONTEXT *)context)->visitor;
+  return visitor(item, ((COLLECTION_VISIT_CONTEXT *)context)->context);
 }
 
 bool collection_visit_cross_index(const COLLECTION *collection,
                                   bool second_index,
                                   COLLECTION_VISITOR visitor,
-                                  void *context);
+                                  void *context) {
+  if (collection == NULL || visitor == NULL || collection->type != COLLECTION_CROSS_LIST)
+    return false;
+
+  COLLECTION_VISIT_CONTEXT visit_context = {visitor, context};
+  CROSSED_LIST *crossed = collection->impl;
+  bool is_row = !second_index;
+  int line_count = crossed_list_capacity(crossed, is_row);
+  for (int index = 0; index < line_count; index++) {
+    if (!crossed_list_visit_line(crossed, index, is_row,
+                                 collection_cross_visit_adapter, &visit_context))
+      return false;
+  }
+  return true;
+}
 
 bool collection_type_parse(const char *name, COLLECTION_TYPE *type)
 {

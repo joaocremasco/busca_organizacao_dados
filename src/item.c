@@ -195,16 +195,16 @@ void item_store_destroy(ITEM_STORE **store)
   for (size_t i = 0; i < (*store)->count; i++) {
     ITEM *item = (*store)->items[i];
 
-    for(size_t j = 0; j < item->count; j++){
+    for (size_t j = 0; j < item->count; j++) {
       free(item->fields[j].name);
       free(item->fields[j].value);
     }
-  }
-  free(item->fields);
-  free(item);
-}
 
-free((*store)->items);
-free(*store);
-*store = NULL;
+    free(item->fields);
+    free(item);
+  }
+
+  free((*store)->items);
+  free(*store);
+  *store = NULL;
 }
