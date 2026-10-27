@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "seq_list.h"
+#include "../include/seq_list.h"
 
 #define STARTING_CAPACITY 8
 

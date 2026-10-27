@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "gen_list.h"
+#include "../include/gen_list.h"
 
 typedef struct node_ NODE;
 

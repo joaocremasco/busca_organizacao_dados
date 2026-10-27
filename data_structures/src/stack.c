@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "stack.h"
+#include "../include/stack.h"
 
 #define STARTING_CAPACITY 8
 

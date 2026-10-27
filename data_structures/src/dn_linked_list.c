@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "dn_linked_list.h"
+#include "../include/dn_linked_list.h"
 
 typedef struct node_ NODE;
 

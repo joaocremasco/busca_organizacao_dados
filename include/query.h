@@ -2,6 +2,8 @@
 #define TRABALHO_QUERY_H
 
 #include "collection.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 typedef struct query QUERY;
 

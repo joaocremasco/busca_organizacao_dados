@@ -2,31 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
-#include "data_structures/stack.h"
-#include "data_structures/seq_list.h"
-#include "data_structures/queue.h"
-#include "data_structures/ord_list.h"
-#include "data_structures/linked_list.h"
-#include "data_structures/gen_list.h"
-#include "data_structures/dn_linked_list.h"
-#include "data_structures/crossed_list.h"
-
-typedef enum {
-  COLLECTION_STACK,
-  COLLECTION_QUEUE,
-  COLLECTION_ARRAY_LIST,
-  COLLECTION_LINKED_LIST,
-  COLLECTION_SENTINEL_LIST,
-  COLLECTION_SORTED_LIST,
-  COLLECTION_GROUPED_LIST,
-  COLLECTION_CROSS_LIST
-} COLLECTION_TYPE;
-
-typedef struct collection COLLECTION;
-
-typedef bool (*COLLECTION_VISITOR)(ITEM *item, void *context);
+#include "../include/collection.h"
+#include "../data_structures/include/stack.h"
+#include "../data_structures/include/seq_list.h"
+#include "../data_structures/include/queue.h"
+#include "../data_structures/include/ord_list.h"
+#include "../data_structures/include/linked_list.h"
+#include "../data_structures/include/gen_list.h"
+#include "../data_structures/include/dn_linked_list.h"
+#include "../data_structures/include/crossed_list.h"
 
 struct collection {
   COLLECTION_TYPE type;
@@ -51,6 +38,12 @@ static const TYPE_ENTRY type_table[] = {
 
 #define TYPE_COUNT (sizeof(type_table) / sizeof(type_table[0]))
 
+static int compare_item_pointers(void *left, void *right) {
+  uintptr_t a = (uintptr_t)left;
+  uintptr_t b = (uintptr_t)right;
+  return (a > b) - (a < b);
+}
+
 COLLECTION *collection_create(COLLECTION_TYPE type,
                               const COLLECTION_OPTIONS *options) {
   COLLECTION *collection = malloc(sizeof(*collection));
@@ -63,31 +56,31 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
 
   switch (type) {
     case COLLECTION_STACK:
-      collection->impl = stack_init();
+      collection->impl = stack_init(NULL);
       break;
 
     case COLLECTION_QUEUE:
-      collection->impl = queue_init();
+      collection->impl = queue_init(NULL);
       break;
 
     case COLLECTION_ARRAY_LIST:
-      collection->impl = seq_list_init();
+      collection->impl = seq_list_init(NULL);
       break;
 
     case COLLECTION_LINKED_LIST:
-      collection->impl = linked_list_init();
+      collection->impl = linked_list_init(NULL);
       break;
 
     case COLLECTION_SORTED_LIST:
-      collection->impl = ord_list_init();
+      collection->impl = ord_list_init(NULL, compare_item_pointers);
       break;
 
     case COLLECTION_SENTINEL_LIST:
-      collection->impl = dn_linked_list_init();
+      collection->impl = dn_linked_list_init(NULL);
       break;
 
     case COLLECTION_CROSS_LIST:
-      collection->impl = cross_list_init();
+      collection->impl = crossed_list_init(NULL);
       break;
 
     case COLLECTION_GROUPED_LIST:
@@ -114,40 +107,53 @@ void collection_destroy(COLLECTION **collection) {
     return;
 
   switch ((*collection)->type) {
-    case COLLECTION_STACK:
-      stack_clear((*collection)->impl);
+    case COLLECTION_STACK: {
+      STACK *impl = (*collection)->impl;
+      stack_destroy(&impl);
       break;
+    }
 
-    case COLLECTION_QUEUE:
-      queue_clear((*collection)->impl);
+    case COLLECTION_QUEUE: {
+      QUEUE *impl = (*collection)->impl;
+      queue_destroy(&impl);
       break;
+    }
 
-    case COLLECTION_ARRAY_LIST:
-      seq_list_clear((*collection)->impl);
+    case COLLECTION_ARRAY_LIST: {
+      SEQ_LIST *impl = (*collection)->impl;
+      seq_list_destroy(&impl);
       break;
+    }
 
-    case COLLECTION_LINKED_LIST:
-      linked_list_clear((*collection)->impl);
+    case COLLECTION_LINKED_LIST: {
+      LINKED_LIST *impl = (*collection)->impl;
+      linked_list_destroy(&impl);
       break;
+    }
 
-    case COLLECTION_SORTED_LIST:
-      ord_list_clear((*collection)->impl);
+    case COLLECTION_SORTED_LIST: {
+      ORD_LIST *impl = (*collection)->impl;
+      ord_list_destroy(&impl);
       break;
+    }
 
-    case COLLECTION_SENTINEL_LIST:
-      dn_linked_list_clear((*collection)->impl);
+    case COLLECTION_SENTINEL_LIST: {
+      DN_LINKED_LIST *impl = (*collection)->impl;
+      dn_linked_list_destroy(&impl);
       break;
+    }
 
-    case COLLECTION_CROSS_LIST:
-      cross_list_clear((*collection)->impl);
+    case COLLECTION_CROSS_LIST: {
+      CROSSED_LIST *impl = (*collection)->impl;
+      crossed_list_destroy(&impl);
       break;
+    }
 
     case COLLECTION_GROUPED_LIST:
     default:
       break;
   }
 
-  free((*collection)->impl);
   free(*collection);
   *collection = NULL;
 }
@@ -161,22 +167,29 @@ bool collection_insert(COLLECTION *collection, ITEM *item) {
       return stack_push(collection->impl, item);
 
     case COLLECTION_QUEUE:
-      return queue_insert(collection->impl, item);
+      return queue_push(collection->impl, item);
 
     case COLLECTION_ARRAY_LIST:
-      return seq_list_insert(collection->impl, item);
+      return seq_list_push_back(collection->impl, item);
 
     case COLLECTION_LINKED_LIST:
-      return linked_list_insert(collection->impl, item);
+      return linked_list_push_back(collection->impl, item);
 
     case COLLECTION_SORTED_LIST:
       return ord_list_insert(collection->impl, item);
 
     case COLLECTION_SENTINEL_LIST:
-      return dn_linked_list_insert(collection->impl, item);
+      return dn_linked_list_push_back(collection->impl, item);
 
     case COLLECTION_CROSS_LIST:
-      return cross_list_insert(collection->impl, item);
+      {
+        CROSSED_LIST *crossed = collection->impl;
+        int row = crossed_list_size(crossed);
+        if (!crossed_list_resize(crossed, row + 1, true) ||
+            !crossed_list_resize(crossed, 1, false))
+          return false;
+        return crossed_list_insert(crossed, row, 0, item);
+      }
 
     case COLLECTION_GROUPED_LIST:
     default:
@@ -190,25 +203,36 @@ bool collection_remove(COLLECTION *collection, ITEM *item) {
 
   switch (collection->type) {
     case COLLECTION_STACK:
-      return stack_pop(collection->impl, item);
+      if (stack_top(collection->impl) != item) return false;
+      return stack_pop(collection->impl) == item;
 
     case COLLECTION_QUEUE:
-      return queue_remove(collection->impl, item);
+      if (queue_front(collection->impl) != item) return false;
+      return queue_pop(collection->impl) == item;
 
     case COLLECTION_ARRAY_LIST:
-      return seq_list_remove(collection->impl, item);
+      {
+        int index = seq_list_find(collection->impl, item, compare_item_pointers);
+        return index >= 0 && seq_list_erase(collection->impl, index) == item;
+      }
 
     case COLLECTION_LINKED_LIST:
-      return linked_list_remove(collection->impl, item);
+      return linked_list_erase(collection->impl, item, compare_item_pointers) == item;
 
     case COLLECTION_SORTED_LIST:
-      return ord_list_remove(collection->impl, item);
+      return ord_list_erase(collection->impl, item) == item;
 
     case COLLECTION_SENTINEL_LIST:
-      return dn_linked_list_remove(collection->impl, item);
+      return dn_linked_list_erase(collection->impl, item, compare_item_pointers) == item;
 
     case COLLECTION_CROSS_LIST:
-      return cross_list_remove(collection->impl, item);
+      {
+        CROSSED_LIST *crossed = collection->impl;
+        int row, column;
+        if (crossed_list_find(crossed, item, compare_item_pointers, &row, &column) != item)
+          return false;
+        return crossed_list_remove(crossed, row, column) == item;
+      }
 
     case COLLECTION_GROUPED_LIST:
     default:
@@ -240,7 +264,7 @@ size_t collection_size(const COLLECTION *collection) {
       return dn_linked_list_size(collection->impl);
 
     case COLLECTION_CROSS_LIST:
-      return cross_list_size(collection->impl);
+      return crossed_list_size(collection->impl);
 
     case COLLECTION_GROUPED_LIST:
     default:

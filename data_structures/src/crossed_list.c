@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "crossed_list.h"
+#include "../include/crossed_list.h"
 
 typedef struct node_ NODE;
 
