@@ -1,7 +1,7 @@
 #ifndef TRABALHO_QUERY_H
 #define TRABALHO_QUERY_H
 
-#include "trabalho/collection.h"
+#include "collection.h"
 
 typedef struct query QUERY;
 
