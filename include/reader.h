@@ -1,7 +1,7 @@
 #ifndef TRABALHO_READER_H
 #define TRABALHO_READER_H
 
-#include "trabalho/item.h"
+#include "item.h"
 #include <stddef.h>
 
 typedef struct reader READER;

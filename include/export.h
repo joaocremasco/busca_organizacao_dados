@@ -1,8 +1,8 @@
 #ifndef TRABALHO_EXPORT_H
 #define TRABALHO_EXPORT_H
 
-#include "trabalho/collection.h"
-#include "trabalho/reader.h"
+#include "collection.h"
+#include "reader.h"
 
 #include <stdbool.h>
 #include <stddef.h>

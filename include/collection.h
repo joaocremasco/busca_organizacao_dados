@@ -1,7 +1,7 @@
 #ifndef TRABALHO_COLLECTION_H
 #define TRABALHO_COLLECTION_H
 
-#include "trabalho/item.h"
+#include "item.h"
 #include <stdbool.h>
 #include <stddef.h>
 
