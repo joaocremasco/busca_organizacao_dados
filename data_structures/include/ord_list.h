@@ -4,8 +4,11 @@
 #include <stdbool.h>
 
 typedef struct ord_list_ ORD_LIST;
+typedef int (*ORD_LIST_COMPARE)(void *left, void *right, void *context);
 
 ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*));
+ORD_LIST* ord_list_init_with_context(void (*destroy)(void*),
+                                     ORD_LIST_COMPARE cmp, void *context);
 void ord_list_destroy(ORD_LIST **sq);
 
 bool ord_list_insert(ORD_LIST *sq, void *object);

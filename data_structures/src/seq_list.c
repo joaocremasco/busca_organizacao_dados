@@ -12,14 +12,14 @@ struct seq_list_ {
 
 SEQ_LIST* seq_list_init(void (*destroy)(void*)) {
 
-	SEQ_LIST* sq = malloc(sizeof(SEQ_LIST));
+	SEQ_LIST* sq = malloc(sizeof(*sq));
 	
 	if(sq == NULL)
 		return NULL;
 
 	sq->size = 0;
 	sq->capacity = STARTING_CAPACITY;
-	sq->array = malloc(sizeof(void*) * STARTING_CAPACITY);
+	sq->array = malloc(sizeof(*sq->array) * STARTING_CAPACITY);
 	sq->destroy = destroy;
 
 	if(sq->array == NULL) {
@@ -60,7 +60,7 @@ bool seq_list_resize(SEQ_LIST *sq, int capacity) {
 		sq->size = capacity;
 	}
 
-	void **tmp_array = realloc(sq->array, capacity * sizeof(void*));
+	void **tmp_array = realloc(sq->array, capacity * sizeof(*tmp_array));
 		
 	if(tmp_array == NULL)
 		return false;

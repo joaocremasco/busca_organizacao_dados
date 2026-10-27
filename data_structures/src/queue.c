@@ -17,7 +17,7 @@ struct queue_ {
 
 QUEUE* queue_init(void (*destroy)(void*)) {
 
-	QUEUE *q = malloc(sizeof(QUEUE));
+	QUEUE *q = malloc(sizeof(*q));
 	
 	if(q == NULL)
 		return NULL;
@@ -52,7 +52,7 @@ bool queue_push(QUEUE *q, void *object) {
 		return false;
 	}
 
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL)
 		return false;

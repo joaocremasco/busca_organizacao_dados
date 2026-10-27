@@ -1,0 +1,4 @@
+# Jogos populares para Windows, cruzados por gênero e disponibilidade.
+FILTER|Peak CCU|>=|1000
+FILTER|Windows|==|true
+CROSS|Genres|Windows

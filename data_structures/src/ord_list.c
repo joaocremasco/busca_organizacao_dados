@@ -9,22 +9,26 @@ struct ord_list_ {
 	void **array;
 	void (*destroy)(void*);
 	int (*cmp)(void*, void*);
+	ORD_LIST_COMPARE cmp_with_context;
+	void *cmp_context;
 };
 
 ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*)) {
 	if(cmp == NULL)
 		return NULL;
 
-	ORD_LIST* sq = malloc(sizeof(ORD_LIST));
+	ORD_LIST* sq = malloc(sizeof(*sq));
 	
 	if(sq == NULL)
 		return NULL;
 
 	sq->size = 0;
 	sq->capacity = STARTING_CAPACITY;
-	sq->array = malloc(sizeof(void*) * STARTING_CAPACITY);
+	sq->array = malloc(sizeof(*sq->array) * STARTING_CAPACITY);
 	sq->destroy = destroy;
 	sq->cmp = cmp;
+	sq->cmp_with_context = NULL;
+	sq->cmp_context = NULL;
 
 	if(sq->array == NULL) {
 		free(sq);
@@ -32,6 +36,36 @@ ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*)) {
 	}
 
 	return sq;
+}
+
+ORD_LIST* ord_list_init_with_context(void (*destroy)(void*),
+                                     ORD_LIST_COMPARE cmp, void *context) {
+	if(cmp == NULL)
+		return NULL;
+
+	ORD_LIST* sq = malloc(sizeof(*sq));
+	if(sq == NULL)
+		return NULL;
+
+	sq->size = 0;
+	sq->capacity = STARTING_CAPACITY;
+	sq->array = malloc(sizeof(*sq->array) * STARTING_CAPACITY);
+	sq->destroy = destroy;
+	sq->cmp = NULL;
+	if(sq->array == NULL) {
+		free(sq);
+		return NULL;
+	}
+
+	sq->cmp_with_context = cmp;
+	sq->cmp_context = context;
+	return sq;
+}
+
+static int compare_objects(ORD_LIST *sq, void *left, void *right) {
+	if(sq->cmp_with_context != NULL)
+		return sq->cmp_with_context(left, right, sq->cmp_context);
+	return sq->cmp(left, right);
 }
 
 void ord_list_destroy(ORD_LIST **sq) {
@@ -65,7 +99,7 @@ bool ord_list_resize(ORD_LIST *sq, int capacity) {
 		sq->size = capacity;
 	}
 
-	void **tmp_array = realloc(sq->array, capacity * sizeof(void*));
+	void **tmp_array = realloc(sq->array, capacity * sizeof(*tmp_array));
 		
 	if(tmp_array == NULL)
 		return false;
@@ -89,7 +123,7 @@ int ord_list_lower_bound(ORD_LIST *sq, void *object) {
 		
 		// -1 = a < b | 0 a == b | 1 a > b
 		
-		int res = sq->cmp(sq->array[mid], object);
+		int res = compare_objects(sq, sq->array[mid], object);
 
 		if(res < 0) {
 			low = mid + 1;
@@ -114,7 +148,7 @@ int ord_list_upper_bound(ORD_LIST *sq, void *object) {
 		
 		// -1 = a < b | 0 a == b | 1 a > b
 		
-		int res = sq->cmp(sq->array[mid], object);
+		int res = compare_objects(sq, sq->array[mid], object);
 
 		if(res > 0) {
 			high = mid;
@@ -136,7 +170,7 @@ int ord_list_find(ORD_LIST *sq, void *object) {
 	if(idx == sq->size)
 		return -1;
 
-	if(sq->cmp(ord_list_get(sq, idx), object) == 0)
+	if(compare_objects(sq, ord_list_get(sq, idx), object) == 0)
 		return idx;
 
 	return -1;

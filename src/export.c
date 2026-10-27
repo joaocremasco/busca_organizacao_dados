@@ -1,5 +1,5 @@
 
-#include "trabalho/export.h"
+#include "export.h"
 
 #include <stdio.h>
 

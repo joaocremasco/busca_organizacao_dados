@@ -24,7 +24,7 @@ struct crossed_list_ {
 
 CROSSED_LIST* crossed_list_init(void (*destroy)(void*)) {
 
-	CROSSED_LIST *list = malloc(sizeof(CROSSED_LIST));
+	CROSSED_LIST *list = malloc(sizeof(*list));
 
 	if(list == NULL)
 		return NULL;
@@ -159,7 +159,7 @@ bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow) {
  
 	if(capacity > old_cap) {
  
-		new = realloc(old_arr, capacity * sizeof(NODE*));
+		new = realloc(old_arr, capacity * sizeof(*new));
  
 		if(new == NULL)
 			return false;
@@ -171,7 +171,7 @@ bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow) {
 	else {
 		int tail_cap = old_cap - capacity;
 
-		tail = malloc((tail_cap) * sizeof(NODE*));
+		tail = malloc((tail_cap) * sizeof(*tail));
  
 		if(tail == NULL)
 			return false;
@@ -185,7 +185,7 @@ bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow) {
 			new = NULL;
 		}
 		else {
-			new = realloc(old_arr, capacity * sizeof(NODE*));
+			new = realloc(old_arr, capacity * sizeof(*new));
  
 			if(new == NULL) {
 				free(tail);
@@ -225,7 +225,7 @@ bool crossed_list_insert(CROSSED_LIST *list, int i, int j, void *object) {
 	NODE *up = crossed_list_iterate_down(list, i, j);
 	NODE *down = up != NULL ? up->down : list->columns[j];
 
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL)
 		return false;

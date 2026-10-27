@@ -177,6 +177,8 @@ static int split_record(char *line, char delimiter, char ***values_out, size_t *
 }
 
 static int read_header(READER *reader) {
+    size_t values_count;
+
     if (read_line(reader) != 1) {
         if (reader->error[0] == '\0')
             snprintf(reader->error, sizeof(reader->error), "O arquivo está vazio");
@@ -184,10 +186,35 @@ static int read_header(READER *reader) {
     }
     reader->delimiter = detect_delimiter(reader->line);
     char **values = NULL;
-    if (!split_record(reader->line, reader->delimiter, &values, &reader->column_count)) {
+    if (!split_record(reader->line, reader->delimiter, &values, &values_count)) {
         snprintf(reader->error, sizeof(reader->error), "Cabeçalho CSV inválido ou sem memória");
         return 0;
     }
+
+    /* The provided games dataset has two header names merged into one cell. */
+    if (strcmp(reader->reader_name, "games") == 0) {
+        for (size_t i = 0; i < values_count; ++i) {
+            if (strcmp(values[i], "DiscountDLC count") == 0) {
+                char **grown = realloc(values,
+                                       (values_count + 1) * sizeof(*values));
+                if (grown == NULL) {
+                    free(values);
+                    snprintf(reader->error, sizeof(reader->error),
+                             "Falha ao corrigir o cabeçalho de games.csv");
+                    return 0;
+                }
+                values = grown;
+                for (size_t j = values_count; j > i + 1; --j)
+                    values[j] = values[j - 1];
+                values[i] = "Discount";
+                values[i + 1] = "DLC count";
+                ++values_count;
+                break;
+            }
+        }
+    }
+
+    reader->column_count = values_count;
     reader->columns = calloc(reader->column_count, sizeof(*reader->columns));
     if (reader->columns == NULL) {
         free(values);

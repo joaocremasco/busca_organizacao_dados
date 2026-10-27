@@ -18,7 +18,7 @@ struct linked_list_ {
 
 LINKED_LIST* linked_list_init(void (*destroy)(void*)) {
 
-	LINKED_LIST *list = malloc(sizeof(LINKED_LIST));
+	LINKED_LIST *list = malloc(sizeof(*list));
 	
 	if(list == NULL)
 		return NULL;
@@ -49,7 +49,7 @@ bool linked_list_push_back(LINKED_LIST *list, void *object) {
 	if(list == NULL || object == NULL)
 		return false;
 	
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL)
 		return false;
@@ -107,7 +107,7 @@ bool linked_list_push_front(LINKED_LIST *list, void *object) {
 	if(list == NULL || object == NULL)
 		return false;
 	
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 	
 	if(node == NULL)
 		return false;
@@ -248,7 +248,7 @@ bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp
 		return false;
 	}
 
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL) {
 		return false;

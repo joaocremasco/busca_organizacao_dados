@@ -12,14 +12,14 @@ struct stack_ {
 
 STACK* stack_init(void (*destroy)(void*)) {
 
-	STACK *st = malloc(sizeof(STACK));
+	STACK *st = malloc(sizeof(*st));
 	
 	if(st == NULL)
 		return NULL;
 	
 	st->size = 0;
 	st->cap = STARTING_CAPACITY;
-	st->array = malloc(STARTING_CAPACITY * sizeof(void*));
+	st->array = malloc(STARTING_CAPACITY * sizeof(*st->array));
 	st->destroy = destroy;
 	
 	if(st->array == NULL) {
@@ -59,7 +59,7 @@ static bool stack_resize(STACK *st, int capacity) {
 		st->size = capacity;
 	}
 
-	void **tmp = realloc(st->array, capacity * sizeof(void*));
+	void **tmp = realloc(st->array, capacity * sizeof(*tmp));
 
 	if(tmp == NULL)
 		return false;

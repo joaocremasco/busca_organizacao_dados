@@ -1,5 +1,11 @@
 # Busca e organização de dados
 
+## Estruturas disponíveis
+
+Use estes nomes nos argumentos `--base` e `--result`: `stack`, `queue`,
+`array_list`, `linked_list`, `sentinel_list`, `ordered_list`,
+`generalized_list` e `crossed_list`.
+
 ## Arquivo de consulta
 
 O módulo `query` lê uma consulta de texto linha a linha. Os nomes dos campos
@@ -32,4 +38,12 @@ forem numéricos, a comparação é numérica; nos demais casos, é textual.
 limitada a zero além da tolerância. Os pesos devem ser não negativos e pelo
 menos um peso deve ser maior que zero. `ACCEPT` é opcional e vai de `0` a
 `1`; sem ele, a pontuação mínima exigida é zero. `ORDER`, `GROUP` e `CROSS`
-preenchem as opções de organização da coleção.
+preenchem as opções de organização da coleção. `ordered_list` exige `ORDER`,
+`generalized_list` exige `GROUP`, e `crossed_list` exige `CROSS`.
+
+## Leitor de jogos
+
+Use `--reader games` para a base `games.csv`. O cabeçalho fornecido junta os
+campos `Discount` e `DLC count`; o leitor separa esses dois nomes para que
+correspondam às colunas dos registros. As consultas de exemplo estão em
+`queries/games_by_genre.txt` e `queries/popular_games_by_genre.txt`.

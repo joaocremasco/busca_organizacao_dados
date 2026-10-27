@@ -17,12 +17,12 @@ struct dn_linked_list_ {
 
 DN_LINKED_LIST* dn_linked_list_init(void (*destroy)(void*)) {
 	
-	DN_LINKED_LIST *list = malloc(sizeof(DN_LINKED_LIST));
+	DN_LINKED_LIST *list = malloc(sizeof(*list));
 	
 	if(list == NULL)
 		return NULL;
 
-	NODE *dummy = malloc(sizeof(NODE));
+	NODE *dummy = malloc(sizeof(*dummy));
 
 	if(dummy == NULL) {
 		free(list);
@@ -59,7 +59,7 @@ bool dn_linked_list_push_back(DN_LINKED_LIST *list, void *object) {
 	if(list == NULL || object == NULL)
 		return false;
 	
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL)
 		return false;
@@ -113,7 +113,7 @@ bool dn_linked_list_push_front(DN_LINKED_LIST *list, void *object) {
 	if(list == NULL || object == NULL)
 		return false;
 	
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 	
 	if(node == NULL)
 		return false;
@@ -211,7 +211,7 @@ bool dn_linked_list_insert(DN_LINKED_LIST *list, void *object, void *target, int
 	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
 		return false;
 		
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL) {
 		return false;

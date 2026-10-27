@@ -18,6 +18,16 @@
 struct collection {
   COLLECTION_TYPE type;
   void *impl;
+  const char *order_field;
+  bool descending;
+  const char *group_field;
+  const char *subgroup_field;
+  const char *cross_field;
+  const char *cross_second_field;
+  char **cross_rows;
+  size_t cross_row_count;
+  char **cross_columns;
+  size_t cross_column_count;
 };
 
 typedef struct {
@@ -26,14 +36,23 @@ typedef struct {
 } TYPE_ENTRY;
 
 static const TYPE_ENTRY type_table[] = {
+    {"stack", COLLECTION_STACK},
+    {"queue", COLLECTION_QUEUE},
+    {"array_list", COLLECTION_ARRAY_LIST},
+    {"linked_list", COLLECTION_LINKED_LIST},
+    {"sentinel_list", COLLECTION_SENTINEL_LIST},
+    {"ordered_list", COLLECTION_SORTED_LIST},
+    {"generalized_list", COLLECTION_GROUPED_LIST},
+    {"crossed_list", COLLECTION_CROSS_LIST},
+    /* Names used by the project handout, kept as command-line aliases. */
     {"pilha", COLLECTION_STACK},
     {"fila", COLLECTION_QUEUE},
-    {"lista_sequencial", COLLECTION_ARRAY_LIST},
-    {"lista_encadeada", COLLECTION_LINKED_LIST},
-    {"lista_sent(inela)", COLLECTION_SENTINEL_LIST},
-    {"lista_ordenada", COLLECTION_SORTED_LIST},
-    {"lista_agrupada", COLLECTION_GROUPED_LIST},
-    {"lista_cruzada", COLLECTION_CROSS_LIST}
+    {"lista_seq", COLLECTION_ARRAY_LIST},
+    {"lista_enc", COLLECTION_LINKED_LIST},
+    {"lista_cabeca", COLLECTION_SENTINEL_LIST},
+    {"lista_ord", COLLECTION_SORTED_LIST},
+    {"lista_gen", COLLECTION_GROUPED_LIST},
+    {"lista_cruz", COLLECTION_CROSS_LIST}
 };
 
 #define TYPE_COUNT (sizeof(type_table) / sizeof(type_table[0]))
@@ -42,6 +61,140 @@ static int compare_item_pointers(void *left, void *right) {
   uintptr_t a = (uintptr_t)left;
   uintptr_t b = (uintptr_t)right;
   return (a > b) - (a < b);
+}
+
+static int compare_item_fields(void *left, void *right, void *context) {
+  const COLLECTION *collection = context;
+  if (collection->order_field == NULL)
+    return compare_item_pointers(left, right);
+  const char *left_value = item_get(left, collection->order_field);
+  const char *right_value = item_get(right, collection->order_field);
+  double left_number, right_number;
+  int result;
+
+  if (left_value == NULL)
+    left_value = "";
+  if (right_value == NULL)
+    right_value = "";
+
+  if (item_get_number(left, collection->order_field, &left_number) &&
+      item_get_number(right, collection->order_field, &right_number)) {
+    result = left_number < right_number ? -1 : left_number > right_number;
+  } else {
+    result = strcmp(left_value, right_value);
+  }
+
+  return collection->descending ? -result : result;
+}
+
+static char *copy_text(const char *text) {
+  size_t length = strlen(text) + 1;
+  char *copy = malloc(length);
+  if (copy != NULL)
+    memcpy(copy, text, length);
+  return copy;
+}
+
+typedef struct {
+  char *key;
+  GEN_LIST *subgroups;
+} GroupEntry;
+
+typedef struct {
+  char *key;
+  GEN_LIST *items;
+} SubgroupEntry;
+
+static void destroy_subgroup(void *object) {
+  SubgroupEntry *subgroup = object;
+  if (subgroup == NULL)
+    return;
+  gen_list_destroy(&subgroup->items);
+  free(subgroup->key);
+  free(subgroup);
+}
+
+static void destroy_group(void *object) {
+  GroupEntry *group = object;
+  if (group == NULL)
+    return;
+  gen_list_destroy(&group->subgroups);
+  free(group->key);
+  free(group);
+}
+
+typedef struct {
+  const char *key;
+  void *found;
+  bool find_group;
+} FindEntryContext;
+
+static bool find_group_entry(void *object, void *context) {
+  FindEntryContext *find = context;
+  if (find->find_group) {
+    GroupEntry *group = object;
+    if (strcmp(group->key, find->key) == 0) {
+      find->found = group;
+      return false;
+    }
+  } else {
+    SubgroupEntry *subgroup = object;
+    if (strcmp(subgroup->key, find->key) == 0) {
+      find->found = subgroup;
+      return false;
+    }
+  }
+  return true;
+}
+
+static void *find_group_value(GEN_LIST *list, const char *key, bool groups) {
+  FindEntryContext context = {key, NULL, groups};
+  (void)gen_list_visit(list, find_group_entry, &context);
+  return context.found;
+}
+
+static int compare_item_pointers_callback(void *left, void *right) {
+  return compare_item_pointers(left, right);
+}
+
+static int find_text_index(char **values, size_t count, const char *value) {
+  for (size_t i = 0; i < count; ++i)
+    if (strcmp(values[i], value) == 0)
+      return (int)i;
+  return -1;
+}
+
+static int add_text_index(char ***values, size_t *count, const char *value) {
+  int index = find_text_index(*values, *count, value);
+  if (index >= 0)
+    return index;
+
+  char *copy = copy_text(value);
+  char **grown;
+  if (copy == NULL)
+    return -1;
+
+  grown = realloc(*values, (*count + 1) * sizeof(**values));
+  if (grown == NULL) {
+    free(copy);
+    return -1;
+  }
+  *values = grown;
+  (*values)[*count] = copy;
+  return (int)(*count)++;
+}
+
+static bool count_subgroup_items(void *object, void *context) {
+  SubgroupEntry *subgroup = object;
+  size_t *count = context;
+  *count += (size_t)gen_list_size(subgroup->items);
+  return true;
+}
+
+static bool count_group_items(void *object, void *context) {
+  GroupEntry *group = object;
+  (void)gen_list_visit(group->subgroups, count_subgroup_items, context);
+  return true;
 }
 
 COLLECTION *collection_create(COLLECTION_TYPE type,
@@ -53,6 +206,16 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
 
   collection->type = type;
   collection->impl = NULL;
+  collection->order_field = options == NULL ? NULL : options->order_field;
+  collection->descending = options != NULL && options->descending;
+  collection->group_field = options == NULL ? NULL : options->group_field;
+  collection->subgroup_field = options == NULL ? NULL : options->subgroup_field;
+  collection->cross_field = options == NULL ? NULL : options->cross_field;
+  collection->cross_second_field = options == NULL ? NULL : options->cross_second_field;
+  collection->cross_rows = NULL;
+  collection->cross_row_count = 0;
+  collection->cross_columns = NULL;
+  collection->cross_column_count = 0;
 
   switch (type) {
     case COLLECTION_STACK:
@@ -72,7 +235,8 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
       break;
 
     case COLLECTION_SORTED_LIST:
-      collection->impl = ord_list_init(NULL, compare_item_pointers);
+      collection->impl = ord_list_init_with_context(NULL, compare_item_fields,
+                                                     collection);
       break;
 
     case COLLECTION_SENTINEL_LIST:
@@ -84,9 +248,8 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
       break;
 
     case COLLECTION_GROUPED_LIST:
-      /* Implementar quando houver suporte a essa estrutura. */
-      free(collection);
-      return NULL;
+      collection->impl = gen_list_init(destroy_group);
+      break;
 
     default:
       free(collection);
@@ -98,7 +261,6 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
     return NULL;
   }
 
-  (void)options;
   return collection;
 }
 
@@ -149,10 +311,22 @@ void collection_destroy(COLLECTION **collection) {
       break;
     }
 
-    case COLLECTION_GROUPED_LIST:
+    case COLLECTION_GROUPED_LIST: {
+      GEN_LIST *impl = (*collection)->impl;
+      gen_list_destroy(&impl);
+      break;
+    }
+
     default:
       break;
   }
+
+  for (size_t i = 0; i < (*collection)->cross_row_count; ++i)
+    free((*collection)->cross_rows[i]);
+  for (size_t i = 0; i < (*collection)->cross_column_count; ++i)
+    free((*collection)->cross_columns[i]);
+  free((*collection)->cross_rows);
+  free((*collection)->cross_columns);
 
   free(*collection);
   *collection = NULL;
@@ -184,14 +358,78 @@ bool collection_insert(COLLECTION *collection, ITEM *item) {
     case COLLECTION_CROSS_LIST:
       {
         CROSSED_LIST *crossed = collection->impl;
-        int row = crossed_list_size(crossed);
-        if (!crossed_list_resize(crossed, row + 1, true) ||
-            !crossed_list_resize(crossed, 1, false))
+        const char *row_value;
+        const char *column_value;
+        int row, column;
+
+        if (collection->cross_field == NULL ||
+            collection->cross_second_field == NULL)
           return false;
-        return crossed_list_insert(crossed, row, 0, item);
+
+        row_value = item_get(item, collection->cross_field);
+        column_value = item_get(item, collection->cross_second_field);
+        row = add_text_index(&collection->cross_rows,
+                             &collection->cross_row_count,
+                             row_value == NULL ? "" : row_value);
+        column = add_text_index(&collection->cross_columns,
+                                &collection->cross_column_count,
+                                column_value == NULL ? "" : column_value);
+        if (row < 0 || column < 0 ||
+            !crossed_list_resize(crossed, (int)collection->cross_row_count, true) ||
+            !crossed_list_resize(crossed, (int)collection->cross_column_count, false))
+          return false;
+        return crossed_list_insert(crossed, row, column, item);
       }
 
     case COLLECTION_GROUPED_LIST:
+      {
+        GEN_LIST *groups = collection->impl;
+        const char *group_value;
+        const char *subgroup_value;
+        GroupEntry *group;
+        SubgroupEntry *subgroup;
+
+        if (collection->group_field == NULL ||
+            collection->subgroup_field == NULL)
+          return false;
+
+        group_value = item_get(item, collection->group_field);
+        subgroup_value = item_get(item, collection->subgroup_field);
+        if (group_value == NULL)
+          group_value = "";
+        if (subgroup_value == NULL)
+          subgroup_value = "";
+
+        group = find_group_value(groups, group_value, true);
+        if (group == NULL) {
+          group = malloc(sizeof(*group));
+          if (group == NULL)
+            return false;
+          group->key = copy_text(group_value);
+          group->subgroups = gen_list_init(destroy_subgroup);
+          if (group->key == NULL || group->subgroups == NULL ||
+              !gen_list_push_back(groups, group, true)) {
+            destroy_group(group);
+            return false;
+          }
+        }
+
+        subgroup = find_group_value(group->subgroups, subgroup_value, false);
+        if (subgroup == NULL) {
+          subgroup = malloc(sizeof(*subgroup));
+          if (subgroup == NULL)
+            return false;
+          subgroup->key = copy_text(subgroup_value);
+          subgroup->items = gen_list_init(NULL);
+          if (subgroup->key == NULL || subgroup->items == NULL ||
+              !gen_list_push_back(group->subgroups, subgroup, true)) {
+            destroy_subgroup(subgroup);
+            return false;
+          }
+        }
+        return gen_list_push_back(subgroup->items, item, true);
+      }
+
     default:
       return false;
   }
@@ -235,6 +473,44 @@ bool collection_remove(COLLECTION *collection, ITEM *item) {
       }
 
     case COLLECTION_GROUPED_LIST:
+      {
+        GroupEntry *group;
+        SubgroupEntry *subgroup;
+        bool atom;
+        const char *group_value;
+        const char *subgroup_value;
+
+        if (collection->group_field == NULL ||
+            collection->subgroup_field == NULL)
+          return false;
+
+        group_value = item_get(item, collection->group_field);
+        subgroup_value = item_get(item, collection->subgroup_field);
+        group = find_group_value(collection->impl,
+                                 group_value == NULL ? "" : group_value, true);
+        if (group == NULL)
+          return false;
+        subgroup = find_group_value(group->subgroups,
+                                    subgroup_value == NULL ? "" : subgroup_value,
+                                    false);
+        if (subgroup == NULL ||
+            gen_list_erase(subgroup->items, item, true,
+                           compare_item_pointers_callback, &atom) == NULL)
+          return false;
+
+        if (gen_list_empty(subgroup->items)) {
+          (void)gen_list_erase(group->subgroups, subgroup, true,
+                               compare_item_pointers_callback, &atom);
+          destroy_subgroup(subgroup);
+        }
+        if (gen_list_empty(group->subgroups)) {
+          (void)gen_list_erase(collection->impl, group, true,
+                               compare_item_pointers_callback, &atom);
+          destroy_group(group);
+        }
+        return true;
+      }
+
     default:
       return false;
   }
@@ -267,6 +543,12 @@ size_t collection_size(const COLLECTION *collection) {
       return crossed_list_size(collection->impl);
 
     case COLLECTION_GROUPED_LIST:
+      {
+        size_t count = 0;
+        (void)gen_list_visit(collection->impl, count_group_items, &count);
+        return count;
+      }
+
     default:
       return 0;
   }
@@ -276,6 +558,21 @@ typedef struct {
   COLLECTION_VISITOR visitor;
   void *context;
 } COLLECTION_VISIT_CONTEXT;
+
+static bool visit_group_item(void *item, void *context) {
+  COLLECTION_VISIT_CONTEXT *visit = context;
+  return visit->visitor(item, visit->context);
+}
+
+static bool visit_group_subgroups(void *object, void *context) {
+  SubgroupEntry *subgroup = object;
+  return gen_list_visit(subgroup->items, visit_group_item, context);
+}
+
+static bool visit_groups(void *object, void *context) {
+  GroupEntry *group = object;
+  return gen_list_visit(group->subgroups, visit_group_subgroups, context);
+}
 
 static bool collection_cross_visit_adapter(int i, int j, void *item, void *context);
 
@@ -303,7 +600,11 @@ bool collection_visit(const COLLECTION *collection,
       return crossed_list_visit(collection->impl, collection_cross_visit_adapter,
                                 &visit_context);
     }
-    case COLLECTION_GROUPED_LIST:
+    case COLLECTION_GROUPED_LIST: {
+      COLLECTION_VISIT_CONTEXT visit_context = {visitor, context};
+      return gen_list_visit(collection->impl, visit_groups, &visit_context);
+    }
+
     default:
       return false;
   }

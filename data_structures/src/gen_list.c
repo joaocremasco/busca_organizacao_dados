@@ -24,7 +24,7 @@ static void set_atom(bool *ptr, bool v) {
 
 GEN_LIST* gen_list_init(void (*destroy)(void*)) {
 
-	GEN_LIST *list = malloc(sizeof(GEN_LIST));
+	GEN_LIST *list = malloc(sizeof(*list));
 	
 	if(list == NULL)
 		return NULL;
@@ -64,7 +64,7 @@ bool gen_list_push_back(GEN_LIST *list, void *object, bool atom) {
 	if(list == NULL || object == NULL)
 		return false;
 	
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL)
 		return false;
@@ -133,7 +133,7 @@ bool gen_list_push_front(GEN_LIST *list, void *object, bool atom) {
 	if(list == NULL || object == NULL)
 		return false;
 	
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 	
 	if(node == NULL)
 		return false;
@@ -282,7 +282,7 @@ bool gen_list_insert(GEN_LIST *list, void *object, bool obj_atom, void *target, 
 		return false;
 	}
 
-	NODE *node = malloc(sizeof(NODE));
+	NODE *node = malloc(sizeof(*node));
 
 	if(node == NULL) {
 		return false;

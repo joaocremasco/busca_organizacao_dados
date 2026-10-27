@@ -71,6 +71,16 @@ static bool parse_double(const char *text, double *value) {
     return true;
 }
 
+static bool equals_ignore_case(const char *left, const char *right) {
+    while (*left != '\0' && *right != '\0') {
+        if (tolower((unsigned char)*left) != tolower((unsigned char)*right))
+            return false;
+        ++left;
+        ++right;
+    }
+    return *left == '\0' && *right == '\0';
+}
+
 static bool replace_string(char **destination, const char *source) {
     char *copy = duplicate_text(source);
 
@@ -436,11 +446,25 @@ static bool filter_matches(const FilterRule *filter, const ITEM *item) {
     double actual_number;
     double expected_number;
     int comparison;
+    int actual_boolean = -1;
+    int expected_boolean = -1;
 
     if (actual_value == NULL)
         return false;
 
-    if (parse_double(actual_value, &actual_number) &&
+    if (equals_ignore_case(actual_value, "true"))
+        actual_boolean = 1;
+    else if (equals_ignore_case(actual_value, "false"))
+        actual_boolean = 0;
+
+    if (equals_ignore_case(filter->expected_value, "true"))
+        expected_boolean = 1;
+    else if (equals_ignore_case(filter->expected_value, "false"))
+        expected_boolean = 0;
+
+    if (actual_boolean >= 0 && expected_boolean >= 0) {
+        comparison = actual_boolean - expected_boolean;
+    } else if (parse_double(actual_value, &actual_number) &&
         parse_double(filter->expected_value, &expected_number)) {
         comparison = actual_number < expected_number ? -1 :
                      actual_number > expected_number ? 1 : 0;
@@ -538,4 +562,8 @@ bool query_has_cross(const QUERY *query) {
     return query != NULL &&
            query->cross_field != NULL &&
            query->cross_second_field != NULL;
+}
+
+bool query_has_order(const QUERY *query) {
+  return query != NULL && query->order_field != NULL;
 }
