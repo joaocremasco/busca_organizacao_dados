@@ -1,0 +1,1 @@
+FILTER|distance_au|<=|0.1
