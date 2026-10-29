@@ -1,3 +1,4 @@
+/* Implementa uma lista generalizada com nós atômicos ou sublistas. */
 #include <stdlib.h>
 #include "../include/gen_list.h"
 
@@ -6,7 +7,7 @@ typedef struct node_ NODE;
 struct node_ {
 	NODE *next;
 	NODE *prev;
-	bool atom; // 1 eh atomo | 0 nao eh
+	bool atom; // true indica um átomo; false indica uma sublista.
 	void *object;
 };
 
@@ -17,6 +18,7 @@ struct gen_list_ {
 	void (*destroy)(void*);
 };
 
+/* Atualiza o marcador de átomo quando o chamador forneceu esse endereço. */
 static void set_atom(bool *ptr, bool v) {
 	if(ptr != NULL)
 		*ptr = v;
@@ -198,6 +200,7 @@ void* gen_list_front(GEN_LIST* list, bool *isAtom) {
 	return list->front->object;
 }
 
+/* Busca recursivamente um nó que corresponda ao objeto e ao tipo de entrada. */
 static NODE* find_helper(GEN_LIST *list, void *object, int (*cmp)(void*, void*), bool atom) {
 	if(list == NULL || object == NULL || cmp == NULL) {
 		return NULL;

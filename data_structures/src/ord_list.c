@@ -1,3 +1,4 @@
+/* Implementa uma lista sequencial que mantém os elementos ordenados. */
 #include <stdlib.h>
 #include "../include/ord_list.h"
 
@@ -62,6 +63,7 @@ ORD_LIST* ord_list_init_with_context(void (*destroy)(void*),
 	return sq;
 }
 
+/* Encaminha a comparação à função sem contexto ou à função com contexto. */
 static int compare_objects(ORD_LIST *sq, void *left, void *right) {
 	if(sq->cmp_with_context != NULL)
 		return sq->cmp_with_context(left, right, sq->cmp_context);
@@ -121,7 +123,7 @@ int ord_list_lower_bound(ORD_LIST *sq, void *object) {
 
 		int mid = low + (high - low)/2;
 		
-		// -1 = a < b | 0 a == b | 1 a > b
+		// -1 indica menor, 0 igual e 1 maior.
 		
 		int res = compare_objects(sq, sq->array[mid], object);
 
@@ -146,7 +148,7 @@ int ord_list_upper_bound(ORD_LIST *sq, void *object) {
 
 		int mid = low + (high - low)/2;
 		
-		// -1 = a < b | 0 a == b | 1 a > b
+		// -1 indica menor, 0 igual e 1 maior.
 		
 		int res = compare_objects(sq, sq->array[mid], object);
 

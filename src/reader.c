@@ -1,3 +1,4 @@
+/* Lê registros CSV e cria ITEMs no armazenamento compartilhado. */
 #include "../include/reader.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,7 +133,7 @@ static char detect_delimiter(const char *line) {
     return candidates[best];
 }
 
-/* Divide e desescapa um registro in-place; os valores apontam para line. */
+/* Separa campos respeitando aspas e grava os valores no próprio buffer da linha. */
 static int split_record(char *line, char delimiter, char ***values_out, size_t *count_out) {
     size_t capacity = 8, count = 0;
     char **values = malloc(capacity * sizeof(*values));
@@ -176,6 +177,7 @@ static int split_record(char *line, char delimiter, char ***values_out, size_t *
     return 1;
 }
 
+/* Detecta o delimitador, corrige o cabeçalho específico de games e guarda as colunas. */
 static int read_header(READER *reader) {
     size_t values_count;
 
@@ -191,7 +193,7 @@ static int read_header(READER *reader) {
         return 0;
     }
 
-    /* The provided games dataset has two header names merged into one cell. */
+    /* Corrige no cabeçalho de games os nomes de duas colunas unidos em uma célula. */
     if (strcmp(reader->reader_name, "games") == 0) {
         for (size_t i = 0; i < values_count; ++i) {
             if (strcmp(values[i], "DiscountDLC count") == 0) {

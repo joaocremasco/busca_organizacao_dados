@@ -1,3 +1,4 @@
+/* Implementa uma lista encadeada com nó sentinela permanente. */
 #include <stdlib.h>
 #include "../include/dn_linked_list.h"
 

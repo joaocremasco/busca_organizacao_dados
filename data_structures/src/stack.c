@@ -1,3 +1,4 @@
+/* Implementa uma pilha sequencial com redimensionamento dinâmico. */
 #include <stdlib.h>
 #include "../include/stack.h"
 
@@ -46,6 +47,7 @@ void stack_destroy(STACK **st) {
 	*st = NULL;
 }
 
+/* Amplia o vetor da pilha sem alterar os elementos armazenados. */
 static bool stack_resize(STACK *st, int capacity) {
 	if(st == NULL || capacity <= 0)
 		return false;

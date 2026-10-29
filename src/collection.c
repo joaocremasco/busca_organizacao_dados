@@ -1,3 +1,4 @@
+/* Adapta os TADs disponíveis à interface comum de coleções do programa. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +45,7 @@ static const TYPE_ENTRY type_table[] = {
     {"ordered_list", COLLECTION_SORTED_LIST},
     {"generalized_list", COLLECTION_GROUPED_LIST},
     {"crossed_list", COLLECTION_CROSS_LIST},
-    /* Names used by the project handout, kept as command-line aliases. */
+    /* Mantém também os nomes em português usados no enunciado. */
     {"pilha", COLLECTION_STACK},
     {"fila", COLLECTION_QUEUE},
     {"lista_seq", COLLECTION_ARRAY_LIST},
@@ -63,6 +64,7 @@ static int compare_item_pointers(void *left, void *right) {
   return (a > b) - (a < b);
 }
 
+/* Compara itens pelo campo ORDER e aplica a direção solicitada. */
 static int compare_item_fields(void *left, void *right, void *context) {
   const COLLECTION *collection = context;
   if (collection->order_field == NULL)
@@ -105,6 +107,7 @@ typedef struct {
   GEN_LIST *items;
 } SubgroupEntry;
 
+/* Libera os metadados e a lista interna de um subgrupo, sem liberar ITEMs. */
 static void destroy_subgroup(void *object) {
   SubgroupEntry *subgroup = object;
   if (subgroup == NULL)
@@ -114,6 +117,7 @@ static void destroy_subgroup(void *object) {
   free(subgroup);
 }
 
+/* Libera os metadados e subgrupos de um grupo, sem liberar ITEMs. */
 static void destroy_group(void *object) {
   GroupEntry *group = object;
   if (group == NULL)
@@ -129,6 +133,7 @@ typedef struct {
   bool find_group;
 } FindEntryContext;
 
+/* Encontra uma chave no nível de grupos ou no nível de subgrupos. */
 static bool find_group_entry(void *object, void *context) {
   FindEntryContext *find = context;
   if (find->find_group) {
@@ -147,6 +152,7 @@ static bool find_group_entry(void *object, void *context) {
   return true;
 }
 
+/* Busca linearmente uma chave de grupo ou subgrupo na lista generalizada. */
 static void *find_group_value(GEN_LIST *list, const char *key, bool groups) {
   FindEntryContext context = {key, NULL, groups};
   (void)gen_list_visit(list, find_group_entry, &context);
@@ -157,6 +163,7 @@ static int compare_item_pointers_callback(void *left, void *right) {
   return compare_item_pointers(left, right);
 }
 
+/* Localiza uma chave textual já registrada no índice cruzado. */
 static int find_text_index(char **values, size_t count, const char *value) {
   for (size_t i = 0; i < count; ++i)
     if (strcmp(values[i], value) == 0)
@@ -164,6 +171,7 @@ static int find_text_index(char **values, size_t count, const char *value) {
   return -1;
 }
 
+/* Reutiliza uma chave existente ou a acrescenta ao índice textual. */
 static int add_text_index(char ***values, size_t *count, const char *value) {
   int index = find_text_index(*values, *count, value);
   if (index >= 0)
@@ -184,6 +192,7 @@ static int add_text_index(char ***values, size_t *count, const char *value) {
   return (int)(*count)++;
 }
 
+/* Soma os itens de um subgrupo ao total da coleção. */
 static bool count_subgroup_items(void *object, void *context) {
   SubgroupEntry *subgroup = object;
   size_t *count = context;
@@ -191,6 +200,7 @@ static bool count_subgroup_items(void *object, void *context) {
   return true;
 }
 
+/* Soma os itens de todos os subgrupos de um grupo. */
 static bool count_group_items(void *object, void *context) {
   GroupEntry *group = object;
   (void)gen_list_visit(group->subgroups, count_subgroup_items, context);
@@ -559,16 +569,19 @@ typedef struct {
   void *context;
 } COLLECTION_VISIT_CONTEXT;
 
+/* Encaminha um ITEM do subgrupo à função de visita da coleção. */
 static bool visit_group_item(void *item, void *context) {
   COLLECTION_VISIT_CONTEXT *visit = context;
   return visit->visitor(item, visit->context);
 }
 
+/* Percorre os itens de um subgrupo generalizado. */
 static bool visit_group_subgroups(void *object, void *context) {
   SubgroupEntry *subgroup = object;
   return gen_list_visit(subgroup->items, visit_group_item, context);
 }
 
+/* Percorre os subgrupos e encaminha seus itens à função de visita comum. */
 static bool visit_groups(void *object, void *context) {
   GroupEntry *group = object;
   return gen_list_visit(group->subgroups, visit_group_subgroups, context);
@@ -610,6 +623,7 @@ bool collection_visit(const COLLECTION *collection,
   }
 }
 
+/* Encaminha o ponteiro genérico à função de visita que recebe ITEM *. */
 static bool collection_cross_visit_adapter(int i, int j, void *item, void *context) {
   (void)i;
   (void)j;

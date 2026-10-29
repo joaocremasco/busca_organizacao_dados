@@ -1,3 +1,4 @@
+/* Implementa uma lista sequencial redimensionável. */
 #include <stdlib.h>
 #include "../include/seq_list.h"
 

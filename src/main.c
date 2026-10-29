@@ -1,3 +1,4 @@
+/* Coordena a leitura dos argumentos, a busca e a exportação dos resultados. */
 #include "collection.h"
 #include "export.h"
 #include "item.h"
@@ -17,6 +18,7 @@ typedef struct {
     bool failed;
 } SearchContext;
 
+/* Devolve o horário atual em milissegundos, ou zero se a leitura falhar. */
 static double current_time_ms(void) {
     struct timespec timestamp;
 
@@ -27,6 +29,7 @@ static double current_time_ms(void) {
            (double)timestamp.tv_nsec / 1000000.0;
 }
 
+/* Avalia um ITEM e o insere na coleção de resultados quando aceito. */
 static bool process_search_item(ITEM *item, void *context) {
     SearchContext *search = context;
     double similarity;
@@ -53,6 +56,7 @@ static bool process_search_item(ITEM *item, void *context) {
     return true;
 }
 
+/* Converte apenas dígitos decimais e rejeita valores que excedam size_t. */
 static bool parse_size_argument(const char *text, size_t *value_out) {
     size_t parsed_value = 0;
     size_t digit_index;
@@ -84,6 +88,7 @@ static void print_usage(const char *program_name) {
             program_name);
 }
 
+/* Executa carga, busca, exportação e libera os recursos usados. */
 static int run_program(const char *reader_name, const char *input_path,
                        const char *query_path, const char *output_path,
                        COLLECTION_TYPE base_type, COLLECTION_TYPE result_type,
@@ -217,6 +222,7 @@ static int run_program(const char *reader_name, const char *input_path,
     return exit_status;
 }
 
+/* Valida os argumentos da linha de comando e inicia o processamento. */
 int main(int argc, char **argv) {
     const char *reader_name = NULL;
     const char *input_path = NULL;

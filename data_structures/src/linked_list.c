@@ -1,3 +1,4 @@
+/* Implementa uma lista simplesmente encadeada com ponteiro para o último nó. */
 #include <stdlib.h>
 #include "../include/linked_list.h"
 
@@ -161,6 +162,7 @@ void* linked_list_front(LINKED_LIST* list) {
 	return list->size == 0 ? NULL : list->front->object;
 }
 
+/* Localiza o nó anterior ao primeiro objeto equivalente segundo cmp. */
 static NODE* find_helper(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;

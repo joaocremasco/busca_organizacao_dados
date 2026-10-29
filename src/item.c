@@ -1,3 +1,4 @@
+/* Armazena campos dos itens e controla sua propriedade e liberação. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -12,22 +13,23 @@ typedef struct {
 } FIELD;
 
 struct item_ {
-  FIELD *fields;    /* vetor de pares */
-  size_t count;     /* pares em uso */
-  size_t capacity;  /* pares que cabem sem realloc */
+  FIELD *fields;    /* Campos textuais do item. */
+  size_t count;     /* Campos atualmente armazenados. */
+  size_t capacity;  /* Capacidade alocada para os campos. */
 };
 
 struct item_store {
-  ITEM **items;     /* vetor de ponteiros para itens */
-  size_t count;     /* quantos itens foram registrados */
-  size_t capacity;  /* quantos cabem sem realloc */
+  ITEM **items;     /* Itens cuja memória pertence ao armazenamento. */
+  size_t count;     /* Itens registrados no armazenamento. */
+  size_t capacity;  /* Capacidade alocada para os ponteiros. */
 };
 
 static bool store_add(ITEM_STORE *store, ITEM *item);
 
+/* Cria uma cópia independente da string, incluindo o terminador nulo. */
 static char *copy_string(const char *s)
 {
-  size_t n = strlen(s) + 1;          /* +1 para o '\0' */
+  size_t n = strlen(s) + 1;          /* Inclui espaço para o terminador nulo. */
   char *p = malloc(n);
   if (p != NULL)
     memcpy(p, s, n);
@@ -60,18 +62,6 @@ ITEM *item_create(ITEM_STORE *store, size_t field_capacity)
 
   return item;
 
-  /*if (field_capacity > 0) {
-    item->fields = malloc(sizeof(*item->fields) * field_capacity);
-    if (item->fields == NULL) {
-      free(item); 
-      return NULL; 
-    }
-    item->capacity = field_capacity;
-} else {
-    item->fields = NULL;
-    item->capacity = 0;
-}
-Ver qual mais te agrada em questão de legibilidade - prefiro a opção 1*/
 }
 
 bool item_set(ITEM *item, const char *name, const char *raw_value){
@@ -99,18 +89,6 @@ bool item_set(ITEM *item, const char *name, const char *raw_value){
   item->fields[item->count].value = v;
   item->count++;
 
-  /*item->fields[item->count].name = copy_string(name);
-    if (item->fields[item->count].name == NULL)
-      return false;
-
-    item->fields[item->count].value = copy_string(raw_value);
-    if (item->fields[item->count].value == NULL) {
-      free(item->fields[item->count].name);
-    return false;
-    }
-
-    item->count++; a definir qual é mais legível */
-
   return true;
 }
 
@@ -136,13 +114,13 @@ bool item_get_number(const ITEM *item, const char *name, double *value){
   char *fim;
   double x = strtod(texto, &fim);
   if (fim == texto)
-    return false;            /* nada foi convertido */
+    return false;            /* strtod não converteu nenhum caractere. */
 
   while (isspace((unsigned char)*fim))
     fim++;
 
   if (*fim != '\0')
-    return false;      /* sobrou lixo */
+    return false;      /* Há caracteres não numéricos após o valor. */
 
   *value = x;
   return true;
@@ -159,6 +137,7 @@ const char *item_field_value(const ITEM *item, size_t index){
   return (item == NULL || index >= item->count) ? NULL : item->fields[index].value;
 }
 
+/* Registra o ITEM para que o armazenamento assuma sua liberação. */
 static bool store_add(ITEM_STORE *store, ITEM *item){
   if(store == NULL || item == NULL)
     return false;

@@ -1,3 +1,4 @@
+/* Implementa uma fila encadeada com inserção no fim e remoção no início. */
 #include <stdlib.h>
 #include "../include/queue.h"
 
