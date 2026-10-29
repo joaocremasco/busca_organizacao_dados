@@ -5,7 +5,7 @@
 **Dataset da Parte 2:** dados de jogos (`games.csv`), aprovado pelo docente  
 **Leitor:** `games`
 
-**Ambiente dos exemplos:** Linux x86_64, Intel Core i5-10210U. `clock()` mede tempo de CPU, não tempo decorrido. Nesta auditoria, os exemplos 1 a 3 foram repetidos três vezes. Os exemplos 4 a 6 também foram repetidos três vezes; as medições individuais estão em `resultados/examples_raw.csv`.
+**Ambiente dos exemplos:** Linux x86_64, Intel Core i5-10210U. `clock()` mede tempo de CPU, não tempo decorrido. Nesta auditoria, os exemplos 1 a 3 foram repetidos três vezes. Os exemplos 4 a 6 também foram repetidos três vezes; as medições individuais estão em [examples_raw.csv](../resultados/examples_raw.csv).
 
 ## 1. Organização do programa
 
@@ -31,7 +31,7 @@ Os exemplos usam `asteroid_dataset_20251019.csv`.
 
 #### Exemplo 1 — filtro e similaridade
 
-Consulta ([asteroids_by_risk.txt](queries/asteroids_by_risk.txt)):
+Consulta ([asteroids_by_risk.txt](../queries/asteroids_by_risk.txt)):
 
 ```text
 FILTER|distance_au|<=|0.08
@@ -46,11 +46,11 @@ Comando:
 ./trabalho --reader nasa --input asteroid_dataset_20251019.csv --base linked_list --result array_list --query queries/asteroids_by_risk.txt --output resultados/asteroids_by_risk.csv --top-k 100 --limit 10000
 ```
 
-Resultado: `STATUS=OK`. 10.000 lidos. 93 encontrados e 93 exportados. Médias de três execuções: carga 91.794 ms; busca 13.293 ms; inserção de resultados 0.010 ms; escrita 0.853 ms. Os valores individuais estão em [examples_raw.csv](resultados/examples_raw.csv).
+Resultado: `STATUS=OK`. 10.000 lidos. 93 encontrados e 93 exportados. Médias de três execuções: carga 91.794 ms; busca 13.293 ms; inserção de resultados 0.010 ms; escrita 0.853 ms. Os valores individuais estão em [examples_raw.csv](../resultados/examples_raw.csv).
 
 #### Exemplo 2 — resultados ordenados
 
-Consulta ([asteroids_ordered.txt](queries/asteroids_ordered.txt)): filtra `distance_au <= 0.08` e ordena por `risk_score` decrescente.
+Consulta ([asteroids_ordered.txt](../queries/asteroids_ordered.txt)): filtra `distance_au <= 0.08` e ordena por `risk_score` decrescente.
 
 ```sh
 ./trabalho --reader nasa --input asteroid_dataset_20251019.csv --base queue --result ordered_list --query queries/asteroids_ordered.txt --output resultados/asteroids_ordered.csv --top-k 50 --limit 10000
@@ -60,7 +60,7 @@ Resultado: `STATUS=OK`. 10.000 lidos. 5.501 encontrados e 50 exportados. Médias
 
 #### Exemplo 3 — agrupamento e índice cruzado
 
-Consulta ([asteroids_group_cross.txt](queries/asteroids_group_cross.txt)): filtra `distance_au <= 0.1`, agrupa por `threat_category` e `year` e define esses campos também no índice cruzado. A base usa lista generalizada e o resultado usa lista cruzada.
+Consulta ([asteroids_group_cross.txt](../queries/asteroids_group_cross.txt)): filtra `distance_au <= 0.1`, agrupa por `threat_category` e `year` e define esses campos também no índice cruzado. A base usa lista generalizada e o resultado usa lista cruzada.
 
 ```sh
 ./trabalho --reader nasa --input asteroid_dataset_20251019.csv --base generalized_list --result crossed_list --query queries/asteroids_group_cross.txt --output resultados/asteroids_group_cross.csv --top-k 100 --limit 20000
@@ -70,7 +70,7 @@ Resultado: `STATUS=OK`. 20.000 lidos. 12.919 encontrados e 100 exportados. Médi
 
 ### Parte 2 — Dados de jogos
 
-O grupo reutiliza o mesmo programa e os mesmos TADs, trocando o leitor para `games`. A consulta [games_by_genre.txt](queries/games_by_genre.txt) filtra jogos Windows com preço entre 1 e 100, calcula similaridade em `Peak CCU` e organiza por gênero e idade mínima. A consulta [popular_games_by_genre.txt](queries/popular_games_by_genre.txt) seleciona jogos Windows com `Peak CCU` a partir de 1000 e configura o índice cruzado por gênero e Windows.
+O grupo reutiliza o mesmo programa e os mesmos TADs, trocando o leitor para `games`. A consulta [games_by_genre.txt](../queries/games_by_genre.txt) filtra jogos Windows com preço entre 1 e 100, calcula similaridade em `Peak CCU` e organiza por gênero e idade mínima. A consulta [popular_games_by_genre.txt](../queries/popular_games_by_genre.txt) seleciona jogos Windows com `Peak CCU` a partir de 1000 e configura o índice cruzado por gênero e Windows.
 
 #### Exemplo 4 — agrupamento por gênero e idade
 
@@ -90,7 +90,7 @@ Resultado: `STATUS=OK`. 10.000 lidos. 43 encontrados e 43 exportados. Médias de
 
 #### Exemplo 6 — segunda combinação de TADs
 
-Consulta ([popular_games_ordered.txt](queries/popular_games_ordered.txt)): filtra jogos Windows com `Peak CCU >= 1000` e ordena por `Peak CCU` decrescente.
+Consulta ([popular_games_ordered.txt](../queries/popular_games_ordered.txt)): filtra jogos Windows com `Peak CCU >= 1000` e ordena por `Peak CCU` decrescente.
 
 ```sh
 ./trabalho --reader games --input games.csv --base array_list --result ordered_list --query queries/popular_games_ordered.txt --output resultados/popular_games_ordered.csv --top-k 100 --limit 10000

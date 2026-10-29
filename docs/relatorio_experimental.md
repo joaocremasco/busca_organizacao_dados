@@ -7,7 +7,7 @@
 
 **Data das medições:** 29/10/2026
 
-Cada configuração teve uma execução de aquecimento descartada e três execuções medidas. As 36 medições estão em [benchmark_raw.csv](resultados/benchmark_raw.csv). As tabelas mostram média e desvio padrão amostral (`s`), em milissegundos.
+Cada configuração teve uma execução de aquecimento descartada e três execuções medidas. As 36 medições estão em [benchmark_raw.csv](../resultados/benchmark_raw.csv). As tabelas mostram média e desvio padrão amostral (`s`), em milissegundos.
 
 ## 1. Método de medição
 

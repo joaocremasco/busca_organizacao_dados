@@ -2,6 +2,9 @@ import csv
 import statistics
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+FIGURE_DIR = Path(__file__).resolve().parent / 'fig'
+
 
 def pdf_text(x, y, value, size=8):
     value = value.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
@@ -34,7 +37,7 @@ def save_pdf(path, content, width=533, height=245):
 
 
 def benchmark_means(dataset, field):
-    with open('resultados/benchmark_raw.csv', newline='') as source:
+    with open(PROJECT_ROOT / 'resultados/benchmark_raw.csv', newline='') as source:
         rows = [r for r in csv.DictReader(source) if r['dataset'] == dataset]
     result = []
     for n in ('1000', '5000', '10000', '25000', '50000', 'all'):
@@ -85,11 +88,11 @@ def make_load_search():
     draw_panel(c, 8, 'Asteroides', ns, ast_load, ast_search, 500, [(0,'0'),(200,'200'),(400,'400')])
     draw_panel(c, 272, 'Jogos', game_ns, game_load, game_search, 7000, [(0,'0'),(2000,'2k'),(4000,'4k'),(6000,'6k')])
     c.append(pdf_text(205, 12, 'Registros lidos (N)', 8))
-    save_pdf('fig/fig_carga_busca.pdf', ''.join(c))
+    save_pdf(FIGURE_DIR / 'fig_carga_busca.pdf', ''.join(c))
 
 
 def make_insertions():
-    with open('resultados/examples_raw.csv', newline='') as source:
+    with open(PROJECT_ROOT / 'resultados/examples_raw.csv', newline='') as source:
         rows=list(csv.DictReader(source))
     labels=[]; values=[]
     for i in '123456':
@@ -113,7 +116,7 @@ def make_insertions():
         c.append(pdf_text(x-3,bottom-13,label[0],6))
         c.append(pdf_text(x+1,bottom-23,f'({label[1]:,})'.replace(',','.'),6))
     c.append(pdf_text(208, 12, 'Insercao por item (us)', 8))
-    save_pdf('fig/fig_insercao.pdf',''.join(c))
+    save_pdf(FIGURE_DIR / 'fig_insercao.pdf',''.join(c))
 
 
 make_load_search()
