@@ -13,9 +13,10 @@
 
 typedef struct {
     const QUERY *query;
-    COLLECTION *result_collection;
+    ITEM **accepted_items;
     size_t matched_count;
-    double result_insert_ms;
+    size_t accepted_count;
+    size_t accepted_capacity;
     bool failed;
 } SearchContext;
 
@@ -28,11 +29,9 @@ static double current_time_ms(void) {
     return (double)now * 1000.0 / CLOCKS_PER_SEC;
 }
 
-// o tempo de insercao no resultado e somado a parte pra nao entrar no tempo de busca
 static bool process_search_item(ITEM *item, void *context) {
     SearchContext *search = context;
     double similarity;
-    double insert_start_ms;
     char similarity_text[64];
 
     if (!query_matches(search->query, item, &similarity)) {
@@ -47,12 +46,37 @@ static bool process_search_item(ITEM *item, void *context) {
         return false;
     }
 
-    insert_start_ms = current_time_ms();
-    if (!collection_insert(search->result_collection, item)) {
-        search->failed = true;
-        return false;
+    if (search->accepted_count == search->accepted_capacity) {
+        size_t max_capacity = (size_t)-1 / sizeof(*search->accepted_items);
+        size_t new_capacity;
+        ITEM **new_items;
+
+        if (search->accepted_capacity == 0) {
+            new_capacity = max_capacity < 64 ? max_capacity : 64;
+        } else {
+            if (search->accepted_capacity > max_capacity / 2) {
+                search->failed = true;
+                return false;
+            }
+            new_capacity = search->accepted_capacity * 2;
+        }
+        if (new_capacity <= search->accepted_capacity) {
+            search->failed = true;
+            return false;
+        }
+
+        new_items = realloc(search->accepted_items,
+                            new_capacity * sizeof(*new_items));
+        if (new_items == NULL) {
+            search->failed = true;
+            return false;
+        }
+        search->accepted_items = new_items;
+        search->accepted_capacity = new_capacity;
     }
-    search->result_insert_ms += current_time_ms() - insert_start_ms;
+
+    // guarda os itens aceitos para inserir todos na segunda passada
+    search->accepted_items[search->accepted_count++] = item;
     return true;
 }
 
@@ -182,17 +206,31 @@ static int run_program(const char *reader_name, const char *input_path,
 
     if (!failed) {
         search.query = query;
-        search.result_collection = result_collection;
         start_ms = current_time_ms();
         if (!collection_visit(base_collection, process_search_item, &search) ||
             search.failed) {
             fprintf(stderr, "Falha durante busca ou inserção de resultados.\n");
             failed = true;
         } else {
-            search_ms = current_time_ms() - start_ms - search.result_insert_ms;
-            if (search_ms < 0)
-                search_ms = 0;
-            result_insert_ms = search.result_insert_ms;
+            search_ms = current_time_ms() - start_ms;
+        }
+    }
+
+    if (!failed) {
+        size_t item_index;
+
+        start_ms = current_time_ms();
+        for (item_index = 0; item_index < search.accepted_count; ++item_index) {
+            if (!collection_insert(result_collection,
+                                  search.accepted_items[item_index])) {
+                search.failed = true;
+                break;
+            }
+        }
+        result_insert_ms = current_time_ms() - start_ms;
+        if (search.failed) {
+            fprintf(stderr, "Falha durante busca ou inserção de resultados.\n");
+            failed = true;
         }
     }
 
@@ -221,6 +259,7 @@ static int run_program(const char *reader_name, const char *input_path,
     reader_close(&reader);
     query_destroy(&query);
     item_store_destroy(&item_store);
+    free(search.accepted_items);
     return exit_status;
 }
 

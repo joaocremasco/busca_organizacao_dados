@@ -5,7 +5,7 @@
 **Dataset da Parte 2:** dados de jogos (`games.csv`), aprovado pelo docente  
 **Leitor:** `games`
 
-**Ambiente dos exemplos:** Linux x86_64, Intel Core i5-10210U. As execuções foram realizadas com os CSVs presentes no projeto; as contagens e tempos são as saídas observadas.
+**Ambiente dos exemplos:** Linux x86_64, Intel Core i5-10210U. As contagens são estáveis entre execuções; os tempos abaixo são médias de três execuções com o programa atualizado. `clock()` mede tempo de CPU, não tempo decorrido.
 
 ## 1. Organização do programa
 
@@ -46,7 +46,7 @@ Comando:
 ./trabalho --reader nasa --input asteroid_dataset_20251019.csv --base linked_list --result array_list --query queries/asteroids_by_risk.txt --output resultados/asteroids_by_risk.csv --top-k 100 --limit 10000
 ```
 
-Resultado: `STATUS=OK`, 10.000 lidos, 93 encontrados e 93 exportados. Tempos: carga 169,096 ms; busca 32,085 ms; inserção de resultados 0,037 ms; escrita 2,088 ms.
+Resultado: `STATUS=OK`, 10.000 lidos, 93 encontrados e 93 exportados. Médias de três execuções: carga 85,797 ms; busca 13,789 ms; inserção de resultados 0,006 ms; escrita 0,829 ms.
 
 #### Exemplo 2 — resultados ordenados
 
@@ -56,7 +56,7 @@ Consulta ([asteroids_ordered.txt](queries/asteroids_ordered.txt)): filtra `dista
 ./trabalho --reader nasa --input asteroid_dataset_20251019.csv --base queue --result ordered_list --query queries/asteroids_ordered.txt --output resultados/asteroids_ordered.csv --top-k 50 --limit 10000
 ```
 
-Resultado: `STATUS=OK`, 10.000 lidos, 5.501 encontrados e os primeiros 50 exportados. Tempos: carga 172,663 ms; busca 21,393 ms; inserção de resultados 123,551 ms; escrita 0,414 ms.
+Resultado: `STATUS=OK`, 10.000 lidos, 5.501 encontrados e os primeiros 50 exportados. Médias de três execuções: carga 70,590 ms; busca 15,273 ms; inserção de resultados 85,026 ms; escrita 0,400 ms.
 
 #### Exemplo 3 — agrupamento e índice cruzado
 
@@ -66,7 +66,7 @@ Consulta ([asteroids_group_cross.txt](queries/asteroids_group_cross.txt)): filtr
 ./trabalho --reader nasa --input asteroid_dataset_20251019.csv --base generalized_list --result crossed_list --query queries/asteroids_group_cross.txt --output resultados/asteroids_group_cross.csv --top-k 100 --limit 20000
 ```
 
-Resultado: `STATUS=OK`, 20.000 lidos, 12.919 encontrados e os primeiros 100 exportados. Tempos: carga 248,405 ms; busca 29,791 ms; inserção de resultados 1.005,499 ms; escrita 0,471 ms.
+Resultado: `STATUS=OK`, 20.000 lidos, 12.919 encontrados e os primeiros 100 exportados. Médias de três execuções: carga 120,049 ms; busca 24,424 ms; inserção de resultados 664,502 ms; escrita 0,603 ms.
 
 ### Parte 2 — Dados de jogos
 
@@ -78,7 +78,7 @@ O grupo reutiliza o mesmo programa e os mesmos TADs, trocando o leitor para `gam
 ./trabalho --reader games --input games.csv --base linked_list --result generalized_list --query queries/games_by_genre.txt --output resultados/games_by_genre.csv --top-k 100 --limit 10000
 ```
 
-Resultado: `STATUS=OK`, 10.000 lidos, 6.145 encontrados e 100 exportados. Tempos: carga 485,206 ms; busca 20,174 ms; inserção de resultados 13,532 ms; escrita 3,652 ms.
+Resultado: `STATUS=OK`, 10.000 lidos, 6.145 encontrados e 100 exportados. Médias de três execuções: carga 499,342 ms; busca 21,711 ms; inserção de resultados 14,557 ms; escrita 5,013 ms.
 
 #### Exemplo 5 — índice cruzado
 
@@ -86,7 +86,7 @@ Resultado: `STATUS=OK`, 10.000 lidos, 6.145 encontrados e 100 exportados. Tempos
 ./trabalho --reader games --input games.csv --base array_list --result crossed_list --query queries/popular_games_by_genre.txt --output resultados/popular_games_by_genre.csv --top-k 100 --limit 10000
 ```
 
-Resultado: `STATUS=OK`, 10.000 lidos, 43 encontrados e 43 exportados. Tempos: carga 496,485 ms; busca 5,140 ms; inserção de resultados 0,089 ms; escrita 3,008 ms.
+Resultado: `STATUS=OK`, 10.000 lidos, 43 encontrados e 43 exportados. Médias de três execuções: carga 490,789 ms; busca 4,247 ms; inserção de resultados 0,068 ms; escrita 2,634 ms.
 
 #### Exemplo 6 — segunda combinação de TADs
 
@@ -96,7 +96,7 @@ Consulta ([popular_games_ordered.txt](queries/popular_games_ordered.txt)): filtr
 ./trabalho --reader games --input games.csv --base array_list --result ordered_list --query queries/popular_games_ordered.txt --output resultados/popular_games_ordered.csv --top-k 100 --limit 10000
 ```
 
-Resultado: `STATUS=OK`, 10.000 lidos, 43 encontrados e 43 exportados. Tempos: carga 462,086 ms; busca 8,655 ms; inserção de resultados 0,116 ms; escrita 2,085 ms.
+Resultado: `STATUS=OK`, 10.000 lidos, 43 encontrados e 43 exportados. Médias de três execuções: carga 542,661 ms; busca 8,614 ms; inserção de resultados 0,082 ms; escrita 2,443 ms.
 
 Os CSVs exportados estão em `resultados/` e mantêm as colunas do arquivo de entrada.
 
