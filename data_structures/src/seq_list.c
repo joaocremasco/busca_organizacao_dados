@@ -1,4 +1,4 @@
-/* Implementa uma lista sequencial redimensionável. */
+// vetor que cresce sozinho no push e no insert
 #include <stdlib.h>
 #include "../include/seq_list.h"
 

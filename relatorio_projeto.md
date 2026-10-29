@@ -9,7 +9,7 @@
 
 ## 1. Organização do programa
 
-O programa é escrito em C e dividido em módulos. `src/main.c` interpreta os argumentos de linha de comando, carrega a base na coleção escolhida, percorre essa coleção aplicando a consulta, insere os itens aceitos na coleção de resultados e exporta até `top-k` registros. O executável é gerado por `make` com o nome `trabalho`; a compilação usa `-std=c11 -Wall -Wextra -pedantic`.
+O programa é escrito em C e dividido em módulos. `src/main.c` interpreta os argumentos de linha de comando, carrega a base na coleção escolhida, percorre essa coleção aplicando a consulta, insere os itens aceitos na coleção de resultados e exporta até `top-k` registros. O executável é gerado por `make` com o nome `trabalho`; a compilação usa `-std=c99 -Wall -Wextra -pedantic`.
 
 `src/reader.c` lê o cabeçalho e os registros CSV, detecta vírgula, ponto e vírgula ou tabulação, trata campos entre aspas e cria os itens. Para `--reader games`, corrige o cabeçalho em que `Discount` e `DLC count` aparecem unidos. `src/item.c` representa os campos de cada registro, sem fixar a estrutura ao domínio dos asteroides. `src/query.c` interpreta filtros, similaridades e opções de organização. `src/collection.c` adapta a interface comum às oito estruturas implementadas em `data_structures/`. `src/export.c` escreve os registros mantendo o cabeçalho e as colunas do arquivo de entrada.
 

@@ -1,4 +1,4 @@
-/* Implementa uma lista sequencial que mantém os elementos ordenados. */
+// vetor sempre ordenado, busca e insercao usam busca binaria
 #include <stdlib.h>
 #include "../include/ord_list.h"
 
@@ -63,7 +63,7 @@ ORD_LIST* ord_list_init_with_context(void (*destroy)(void*),
 	return sq;
 }
 
-/* Encaminha a comparação à função sem contexto ou à função com contexto. */
+// usa o cmp com contexto se tiver, senao o simples
 static int compare_objects(ORD_LIST *sq, void *left, void *right) {
 	if(sq->cmp_with_context != NULL)
 		return sq->cmp_with_context(left, right, sq->cmp_context);
@@ -123,7 +123,7 @@ int ord_list_lower_bound(ORD_LIST *sq, void *object) {
 
 		int mid = low + (high - low)/2;
 		
-		// -1 indica menor, 0 igual e 1 maior.
+		// res < 0 quer dizer que o elemento do meio vem antes do alvo
 		
 		int res = compare_objects(sq, sq->array[mid], object);
 
@@ -148,7 +148,7 @@ int ord_list_upper_bound(ORD_LIST *sq, void *object) {
 
 		int mid = low + (high - low)/2;
 		
-		// -1 indica menor, 0 igual e 1 maior.
+		// res > 0 quer dizer que o do meio ja passou do alvo
 		
 		int res = compare_objects(sq, sq->array[mid], object);
 
@@ -187,6 +187,7 @@ bool ord_list_insert(ORD_LIST* sq, void *object) {
 			return false;
 	}
 	
+	// upper_bound deixa os iguais na ordem em que entraram
 	int idx = ord_list_upper_bound(sq, object);
 
 	int seq_size = sq->size;

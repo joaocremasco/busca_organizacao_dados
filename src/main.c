@@ -1,4 +1,5 @@
-/* Coordena a leitura dos argumentos, a busca e a exportação dos resultados. */
+/* fluxo todo: le o csv pra colecao base, percorre ela filtrando
+   pra colecao de resultado e exporta o top-k */
 #include "collection.h"
 #include "export.h"
 #include "item.h"
@@ -18,18 +19,16 @@ typedef struct {
     bool failed;
 } SearchContext;
 
-/* Devolve o horário atual em milissegundos, ou zero se a leitura falhar. */
 static double current_time_ms(void) {
-    struct timespec timestamp;
+    clock_t now = clock();
 
-    if (timespec_get(&timestamp, TIME_UTC) != TIME_UTC) {
+    if (now == (clock_t)-1) {
         return 0;
     }
-    return (double)timestamp.tv_sec * 1000.0 +
-           (double)timestamp.tv_nsec / 1000000.0;
+    return (double)now * 1000.0 / CLOCKS_PER_SEC;
 }
 
-/* Avalia um ITEM e o insere na coleção de resultados quando aceito. */
+// o tempo de insercao no resultado e somado a parte pra nao entrar no tempo de busca
 static bool process_search_item(ITEM *item, void *context) {
     SearchContext *search = context;
     double similarity;
@@ -41,6 +40,7 @@ static bool process_search_item(ITEM *item, void *context) {
     }
     ++search->matched_count;
 
+    // guarda a nota no item pra poder ordenar por similarity
     (void)snprintf(similarity_text, sizeof(similarity_text), "%.17g", similarity);
     if (!item_set(item, "similarity", similarity_text)) {
         search->failed = true;
@@ -56,7 +56,7 @@ static bool process_search_item(ITEM *item, void *context) {
     return true;
 }
 
-/* Converte apenas dígitos decimais e rejeita valores que excedam size_t. */
+// nao usei strtoul porque ele aceita sinal e espaco, aqui so digito
 static bool parse_size_argument(const char *text, size_t *value_out) {
     size_t parsed_value = 0;
     size_t digit_index;
@@ -88,7 +88,7 @@ static void print_usage(const char *program_name) {
             program_name);
 }
 
-/* Executa carga, busca, exportação e libera os recursos usados. */
+// qualquer erro seta failed e pula o resto, o cleanup no final roda sempre
 static int run_program(const char *reader_name, const char *input_path,
                        const char *query_path, const char *output_path,
                        COLLECTION_TYPE base_type, COLLECTION_TYPE result_type,
@@ -116,6 +116,7 @@ static int run_program(const char *reader_name, const char *input_path,
         failed = true;
     }
 
+    // essas estruturas dependem de campos que so a query define
     if (!failed &&
         (((base_type == COLLECTION_GROUPED_LIST ||
            result_type == COLLECTION_GROUPED_LIST) && !query_has_group(query)) ||
@@ -156,6 +157,7 @@ static int run_program(const char *reader_name, const char *input_path,
     }
 
     if (!failed) {
+        // input_limit 0 le o arquivo inteiro
         start_ms = current_time_ms();
         while (input_limit == 0 || input_record_count < input_limit) {
             ITEM *item = NULL;
@@ -222,7 +224,7 @@ static int run_program(const char *reader_name, const char *input_path,
     return exit_status;
 }
 
-/* Valida os argumentos da linha de comando e inicia o processamento. */
+// todas as opcoes sao obrigatorias e vem em par (flag valor)
 int main(int argc, char **argv) {
     const char *reader_name = NULL;
     const char *input_path = NULL;

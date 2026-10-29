@@ -1,7 +1,7 @@
 # Relatório Experimental — Complexidade e Desempenho
 
 **Projeto:** Busca e Organização de Dados — SCC0202  
-**Compilador:** GCC, flags `-std=c11 -Wall -Wextra -pedantic`  
+**Compilador:** GCC, flags `-std=c99 -Wall -Wextra -pedantic`  
 **Máquina/SO:** Intel Core i5-10210U (4 núcleos/8 threads), 15 GiB RAM, Linux x86_64 (kernel 7.0.0-38-generic)  
 **Datasets:** `asteroid_dataset_20251019.csv` (39.380 registros) e `games.csv` (125.811 registros)  
 **Data dos ensaios:** 28/10/2026
@@ -31,7 +31,7 @@ A busca do programa testa os filtros e similaridades em cada item. Para `f` filt
 
 ## 3. Protocolo experimental
 
-1. Usar a compilação do Makefile com `-std=c11 -Wall -Wextra -pedantic`.
+1. Usar a compilação do Makefile com `-std=c99 -Wall -Wextra -pedantic`.
 2. Em cada base, executar seis pares de `--limit` e `--top-k`: (1.000, 10), (5.000, 50), (10.000, 100), (25.000, 500), (50.000, 1.000) e (0, 0), em que zero indica toda a base e todos os resultados. Como a base de asteroides tem 39.380 linhas, o limite de 50.000 chega ao fim do arquivo; `INPUT_RECORDS` no CSV bruto registra esse total efetivo.
 3. Usar `linked_list` como base, `array_list` como estrutura de resultados e as consultas `queries/asteroids_benchmark.txt` e `queries/games_benchmark.txt`.
 4. Repetir cada par três vezes e calcular a média aritmética de `LOAD_MS`, `SEARCH_MS`, `RESULT_INSERT_MS` e `WRITE_MS`. O arquivo bruto mantém as contagens e os tempos de cada execução.

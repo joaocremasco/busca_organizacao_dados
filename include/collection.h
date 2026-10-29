@@ -14,7 +14,7 @@ typedef enum {
 typedef struct collection COLLECTION;
 typedef bool (*COLLECTION_VISITOR)(ITEM *item, void *context);
 
-/* As strings das opções são emprestadas e devem existir enquanto a coleção as utilizar. */
+// so guarda os ponteiros, as strings tem que viver mais que a colecao
 typedef struct {
     const char *order_field;
     bool descending;
@@ -24,30 +24,22 @@ typedef struct {
     const char *cross_second_field;
 } COLLECTION_OPTIONS;
 
-/* Cria a coleção do tipo indicado; retorna NULL se o tipo ou a alocação forem inválidos. */
+// options pode ser NULL
 COLLECTION *collection_create(COLLECTION_TYPE type, const COLLECTION_OPTIONS *options);
-/* Libera a coleção e os metadados das estruturas internas. Não libera ITEMs, que pertencem ao
-   ITEM_STORE. */
+// nao libera os itens, quem libera e o ITEM_STORE
 void collection_destroy(COLLECTION **collection);
-/* Insere uma referência ao ITEM; retorna false para argumentos inválidos ou falha de inserção. O
-   ITEM continua pertencendo ao ITEM_STORE. */
+// guarda so a referencia, falha tambem se faltar GROUP ou CROSS na colecao que precisa
 bool collection_insert(COLLECTION *collection, ITEM *item);
-/* Remove a referência ao ITEM; retorna false se os argumentos forem inválidos ou o ITEM não
-   estiver na coleção. Não libera o ITEM. */
+// pilha e fila so removem o item do topo e do inicio
 bool collection_remove(COLLECTION *collection, ITEM *item);
-/* Devolve a quantidade de ITEMs; retorna 0 se a coleção for NULL. */
 size_t collection_size(const COLLECTION *collection);
-/* Percorre os ITEMs; retorna true se visitar todos e false se os argumentos forem inválidos ou a
-   função de visita parar. */
+// se o visitor devolver false ja para por ali
 bool collection_visit(const COLLECTION *collection, COLLECTION_VISITOR visitor, void *context);
-/* Percorre o índice cruzado escolhido; retorna true se visitar tudo e false para coleção
-   incompatível, argumento inválido ou parada da função de visita. */
+// so pra lista cruzada, percorre linha por linha ou coluna por coluna
 bool collection_visit_cross_index(const COLLECTION *collection, bool second_index,
                                   COLLECTION_VISITOR visitor, void *context);
-/* Converte um nome de estrutura para COLLECTION_TYPE; retorna false se o nome ou os argumentos
-   forem inválidos. */
+// aceita os nomes em ingles e os do enunciado
 bool collection_type_parse(const char *name, COLLECTION_TYPE *type);
-/* Devolve o nome canônico do tipo; retorna "desconhecido" se não houver tipo correspondente. */
 const char *collection_type_name(COLLECTION_TYPE type);
 
 #endif

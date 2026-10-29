@@ -7,8 +7,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-/* Escreve até top_k registros e atualiza written se fornecido; retorna false em argumentos
-   inválidos ou falha de arquivo/escrita. Não assume a propriedade dos ITEMs. */
+// top_k 0 escreve tudo, written pode ser NULL
 bool export_write(const char *path, const READER *reader,
                   const COLLECTION *results, size_t top_k, size_t *written);
 

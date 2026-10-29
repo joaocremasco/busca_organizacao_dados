@@ -1,4 +1,8 @@
-/* Interpreta consultas e avalia filtros e critérios de similaridade. */
+/* le o arquivo de consulta e avalia os itens contra ele
+   uma linha por comando, campos separados por |
+   FILTER|campo|op|valor  SIM|campo|alvo|tolerancia|peso  ACCEPT|0..1
+   ORDER|campo|ASC ou DESC  GROUP|campo|subcampo  CROSS|campo1|campo2
+   linha vazia e # sao ignoradas */
 
 #include "query.h"
 
@@ -14,6 +18,7 @@ typedef struct {
     char *expected_value;
 } FilterRule;
 
+// nota 1 no alvo e cai linear ate 0 na distancia da tolerancia
 typedef struct {
     char *field;
     double target;
@@ -46,6 +51,7 @@ static char *duplicate_text(const char *text) {
     return copy;
 }
 
+// mexe no proprio buffer e devolve o novo comeco
 static char *trim_whitespace(char *text) {
     char *end;
 
@@ -61,7 +67,7 @@ static char *trim_whitespace(char *text) {
     return text;
 }
 
-/* Aceita somente conversões completas para valores double finitos. */
+// rejeita lixo no fim, nan e inf
 static bool parse_double(const char *text, double *value) {
     char *end;
     double parsed = strtod(text, &end);
@@ -73,7 +79,6 @@ static bool parse_double(const char *text, double *value) {
     return true;
 }
 
-/* Compara strings sem diferenciar maiúsculas de minúsculas. */
 static bool equals_ignore_case(const char *left, const char *right) {
     while (*left != '\0' && *right != '\0') {
         if (tolower((unsigned char)*left) != tolower((unsigned char)*right))
@@ -95,7 +100,7 @@ static bool replace_string(char **destination, const char *source) {
     return true;
 }
 
-/* Lê uma linha: 1 em sucesso, 0 no fim, -1 em erro de arquivo e -2 em falta de memória. */
+// 1 ok, 0 acabou, -1 erro de arquivo, -2 sem memoria
 static int read_line(FILE *file, char **line, size_t *capacity) {
     size_t length = 0;
     int character;
@@ -129,7 +134,7 @@ static int read_line(FILE *file, char **line, size_t *capacity) {
     if (character == EOF && length == 0)
         return 0;
 
-    /* Remove o CR usado antes do LF em arquivos com fim de linha do Windows. */
+    // tira o \r de arquivo do windows
     if (length > 0 && (*line)[length - 1] == '\r')
         --length;
 
@@ -169,7 +174,7 @@ static bool append_filter_rule(QUERY *query, char **parts) {
     return true;
 }
 
-/* Valida alvo, tolerância e peso antes de armazenar um critério SIM. */
+// tolerancia tem que ser > 0 e peso >= 0
 static bool append_similarity_rule(QUERY *query, char **parts) {
     SimilarityRule *grown_rules;
     SimilarityRule *new_rule;
@@ -229,7 +234,7 @@ typedef enum {
     QUERY_LINE_OUT_OF_MEMORY
 } QueryLineResult;
 
-/* Interpreta um comando da consulta e distingue sintaxe inválida de falha de memória. */
+// parts[0] e o comando, no maximo 6 partes
 static QueryLineResult parse_query_line(QUERY *query, char *line) {
     char *parts[6] = {0};
     size_t part_count = 0;
@@ -265,7 +270,7 @@ static QueryLineResult parse_query_line(QUERY *query, char *line) {
         if (append_similarity_rule(query, parts))
             return QUERY_LINE_OK;
 
-        /* Revalida os valores para distinguir erro de sintaxe de falha de alocação. */
+        // se os valores sao validos entao o que falhou foi o malloc
         double target, tolerance, weight;
 
         if (!parse_double(parts[2], &target) ||
@@ -397,6 +402,7 @@ QUERY *query_load(const char *path, char *error, size_t error_size) {
     free(line);
     fclose(query_file);
 
+    // se todos os pesos forem 0 a media ponderada ia dividir por 0
     if (query->similarity_count > 0) {
         double total_weight = 0;
 
@@ -444,7 +450,7 @@ void query_destroy(QUERY **query_ptr) {
     *query_ptr = NULL;
 }
 
-/* Compara valores booleanos e numéricos por tipo, usando texto nos demais casos. */
+// tenta bool, depois numero e por ultimo texto, comparison fica igual ao resultado de um strcmp
 static bool filter_matches(const FilterRule *filter, const ITEM *item) {
     const char *actual_value = item_get(item, filter->field);
     double actual_number;
@@ -507,7 +513,6 @@ bool query_matches(const QUERY *query, ITEM *item, double *similarity) {
             return false;
     }
 
-    /* Cada critério contribui com sua pontuação vezes o peso informado. */
     for (size_t i = 0; i < query->similarity_count; ++i) {
         const SimilarityRule *rule = &query->similarities[i];
         double actual_number;
@@ -516,7 +521,7 @@ bool query_matches(const QUERY *query, ITEM *item, double *similarity) {
         if (!item_get_number(item, rule->field, &actual_number)) {
             rule_score = 0;
         } else {
-            /* A pontuação cai linearmente com a distância e não fica negativa. */
+            // campo que nao e numero fica com nota 0
             double distance = actual_number > rule->target
                                   ? actual_number - rule->target
                                   : rule->target - actual_number;
@@ -538,7 +543,7 @@ bool query_matches(const QUERY *query, ITEM *item, double *similarity) {
     if (similarity != NULL)
         *similarity = overall_similarity;
 
-    /* Sem critérios SIM, os filtros bastam; caso contrário aplica-se ACCEPT. */
+    // sem SIM so os filtros contam, com SIM precisa passar do ACCEPT
     return query->similarity_count == 0 ||
            overall_similarity >= query->acceptance_threshold;
 }

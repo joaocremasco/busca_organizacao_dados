@@ -1,4 +1,4 @@
-/* Implementa uma lista cruzada ligada por linhas e por colunas. */
+// matriz esparsa, cada no fica ligado na sua linha e na sua coluna
 #include <stdlib.h>
 #include "../include/crossed_list.h"
 
@@ -40,7 +40,7 @@ CROSSED_LIST* crossed_list_init(void (*destroy)(void*)) {
 	return list;
 }
 
-/* Encontra o nó anterior à coordenada j na linha i. */
+// ultimo no da linha i com coluna <= j, NULL se nao tiver
 static NODE* crossed_list_iterate_right(CROSSED_LIST *list, int i, int j) {
 	NODE *prev = NULL;
 	NODE *idx = list->rows[i];
@@ -53,7 +53,7 @@ static NODE* crossed_list_iterate_right(CROSSED_LIST *list, int i, int j) {
 	return prev;
 }
 
-/* Encontra o nó anterior à coordenada i na coluna j. */
+// ultimo no da coluna j com linha <= i, NULL se nao tiver
 static NODE* crossed_list_iterate_down(CROSSED_LIST *list, int i, int j) {
 	
 	NODE *prev = NULL;
@@ -67,7 +67,7 @@ static NODE* crossed_list_iterate_down(CROSSED_LIST *list, int i, int j) {
 	return prev;
 }
 
-/* Procura uma célula pela coordenada, percorrendo sua linha. */
+// so anda pela linha, a lista da linha e ordenada por coluna
 static NODE* crossed_list_find_node(CROSSED_LIST *list, int i, int j) {
 	if(list == NULL || i < 0 || i >= list->row_cap || j < 0 || j >= list->col_cap)
 		return NULL;
@@ -84,7 +84,7 @@ static NODE* crossed_list_find_node(CROSSED_LIST *list, int i, int j) {
 	return NULL;
 }
 
-/* Desvincula o nó simultaneamente das listas de sua linha e coluna. */
+// se o no for a cabeca da linha ou da coluna atualiza o vetor tambem
 static void crossed_list_unlink(CROSSED_LIST *list, NODE *node) {
 	if(node->up != NULL) {
 		node->up->down = node->down;
@@ -111,7 +111,7 @@ static void crossed_list_unlink(CROSSED_LIST *list, NODE *node) {
 	list->size--;
 }
 
-/* Remove em cadeia os nós alcançados a partir de uma linha ou coluna. */
+// apaga o no e tudo que vem depois dele na linha (ou coluna)
 static bool crossed_list_erase_tail(CROSSED_LIST *list, NODE *node, bool isRow) {
 	if(list == NULL)
 		return false;

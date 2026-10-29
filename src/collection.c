@@ -1,4 +1,4 @@
-/* Adapta os TADs disponíveis à interface comum de coleções do programa. */
+// interface unica pras estruturas, o resto do programa nao precisa saber qual esta usando
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,13 +18,14 @@
 
 struct collection {
   COLLECTION_TYPE type;
-  void *impl;
+  void *impl; // a estrutura de verdade, o tipo depende de type
   const char *order_field;
   bool descending;
   const char *group_field;
   const char *subgroup_field;
   const char *cross_field;
   const char *cross_second_field;
+  // valores distintos de cross_field e cross_second_field, a posicao no vetor e o indice na lista cruzada
   char **cross_rows;
   size_t cross_row_count;
   char **cross_columns;
@@ -45,7 +46,7 @@ static const TYPE_ENTRY type_table[] = {
     {"ordered_list", COLLECTION_SORTED_LIST},
     {"generalized_list", COLLECTION_GROUPED_LIST},
     {"crossed_list", COLLECTION_CROSS_LIST},
-    /* Mantém também os nomes em português usados no enunciado. */
+    // os nomes que o enunciado pede
     {"pilha", COLLECTION_STACK},
     {"fila", COLLECTION_QUEUE},
     {"lista_seq", COLLECTION_ARRAY_LIST},
@@ -58,13 +59,15 @@ static const TYPE_ENTRY type_table[] = {
 
 #define TYPE_COUNT (sizeof(type_table) / sizeof(type_table[0]))
 
+// compara pelo endereco, serve pra achar um item exato na hora de remover
 static int compare_item_pointers(void *left, void *right) {
   uintptr_t a = (uintptr_t)left;
   uintptr_t b = (uintptr_t)right;
   return (a > b) - (a < b);
 }
 
-/* Compara itens pelo campo ORDER e aplica a direção solicitada. */
+/* numero se os dois campos forem numericos, senao texto
+   sem ORDER cai na comparacao de ponteiro */
 static int compare_item_fields(void *left, void *right, void *context) {
   const COLLECTION *collection = context;
   if (collection->order_field == NULL)
@@ -97,6 +100,7 @@ static char *copy_text(const char *text) {
   return copy;
 }
 
+// lista generalizada em 3 niveis, grupo -> subgrupo -> itens
 typedef struct {
   char *key;
   GEN_LIST *subgroups;
@@ -107,7 +111,7 @@ typedef struct {
   GEN_LIST *items;
 } SubgroupEntry;
 
-/* Libera os metadados e a lista interna de um subgrupo, sem liberar ITEMs. */
+// os itens nao sao liberados aqui
 static void destroy_subgroup(void *object) {
   SubgroupEntry *subgroup = object;
   if (subgroup == NULL)
@@ -117,7 +121,6 @@ static void destroy_subgroup(void *object) {
   free(subgroup);
 }
 
-/* Libera os metadados e subgrupos de um grupo, sem liberar ITEMs. */
 static void destroy_group(void *object) {
   GroupEntry *group = object;
   if (group == NULL)
@@ -133,7 +136,7 @@ typedef struct {
   bool find_group;
 } FindEntryContext;
 
-/* Encontra uma chave no nível de grupos ou no nível de subgrupos. */
+// find_group diz se o objeto e um GroupEntry ou um SubgroupEntry
 static bool find_group_entry(void *object, void *context) {
   FindEntryContext *find = context;
   if (find->find_group) {
@@ -152,7 +155,7 @@ static bool find_group_entry(void *object, void *context) {
   return true;
 }
 
-/* Busca linearmente uma chave de grupo ou subgrupo na lista generalizada. */
+// busca linear, achou devolve false pro visit parar
 static void *find_group_value(GEN_LIST *list, const char *key, bool groups) {
   FindEntryContext context = {key, NULL, groups};
   (void)gen_list_visit(list, find_group_entry, &context);
@@ -163,7 +166,6 @@ static int compare_item_pointers_callback(void *left, void *right) {
   return compare_item_pointers(left, right);
 }
 
-/* Localiza uma chave textual já registrada no índice cruzado. */
 static int find_text_index(char **values, size_t count, const char *value) {
   for (size_t i = 0; i < count; ++i)
     if (strcmp(values[i], value) == 0)
@@ -171,7 +173,7 @@ static int find_text_index(char **values, size_t count, const char *value) {
   return -1;
 }
 
-/* Reutiliza uma chave existente ou a acrescenta ao índice textual. */
+// devolve o indice da chave, cria se ainda nao existir
 static int add_text_index(char ***values, size_t *count, const char *value) {
   int index = find_text_index(*values, *count, value);
   if (index >= 0)
@@ -192,7 +194,6 @@ static int add_text_index(char ***values, size_t *count, const char *value) {
   return (int)(*count)++;
 }
 
-/* Soma os itens de um subgrupo ao total da coleção. */
 static bool count_subgroup_items(void *object, void *context) {
   SubgroupEntry *subgroup = object;
   size_t *count = context;
@@ -200,7 +201,7 @@ static bool count_subgroup_items(void *object, void *context) {
   return true;
 }
 
-/* Soma os itens de todos os subgrupos de um grupo. */
+// sempre true pra nao parar nunca
 static bool count_group_items(void *object, void *context) {
   GroupEntry *group = object;
   (void)gen_list_visit(group->subgroups, count_subgroup_items, context);
@@ -245,6 +246,7 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
       break;
 
     case COLLECTION_SORTED_LIST:
+      // a colecao vai de contexto pra o comparador ler order_field e descending
       collection->impl = ord_list_init_with_context(NULL, compare_item_fields,
                                                      collection);
       break;
@@ -258,6 +260,7 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
       break;
 
     case COLLECTION_GROUPED_LIST:
+      // destroy_group so libera as listas internas, nunca os itens
       collection->impl = gen_list_init(destroy_group);
       break;
 
@@ -376,8 +379,10 @@ bool collection_insert(COLLECTION *collection, ITEM *item) {
             collection->cross_second_field == NULL)
           return false;
 
+        // campo ausente vira "" pra todo item ter posicao
         row_value = item_get(item, collection->cross_field);
         column_value = item_get(item, collection->cross_second_field);
+        // cresce a matriz sempre que aparece valor novo
         row = add_text_index(&collection->cross_rows,
                              &collection->cross_row_count,
                              row_value == NULL ? "" : row_value);
@@ -450,6 +455,7 @@ bool collection_remove(COLLECTION *collection, ITEM *item) {
     return false;
 
   switch (collection->type) {
+    // pilha e fila so deixam tirar o item do topo e do inicio
     case COLLECTION_STACK:
       if (stack_top(collection->impl) != item) return false;
       return stack_pop(collection->impl) == item;
@@ -508,6 +514,7 @@ bool collection_remove(COLLECTION *collection, ITEM *item) {
                            compare_item_pointers_callback, &atom) == NULL)
           return false;
 
+        // nao deixa grupo ou subgrupo vazio pra tras
         if (gen_list_empty(subgroup->items)) {
           (void)gen_list_erase(group->subgroups, subgroup, true,
                                compare_item_pointers_callback, &atom);
@@ -569,19 +576,17 @@ typedef struct {
   void *context;
 } COLLECTION_VISIT_CONTEXT;
 
-/* Encaminha um ITEM do subgrupo à função de visita da coleção. */
+// os tres visit abaixo descem grupo, subgrupo e item chamando o visitor da colecao
 static bool visit_group_item(void *item, void *context) {
   COLLECTION_VISIT_CONTEXT *visit = context;
   return visit->visitor(item, visit->context);
 }
 
-/* Percorre os itens de um subgrupo generalizado. */
 static bool visit_group_subgroups(void *object, void *context) {
   SubgroupEntry *subgroup = object;
   return gen_list_visit(subgroup->items, visit_group_item, context);
 }
 
-/* Percorre os subgrupos e encaminha seus itens à função de visita comum. */
 static bool visit_groups(void *object, void *context) {
   GroupEntry *group = object;
   return gen_list_visit(group->subgroups, visit_group_subgroups, context);
@@ -596,6 +601,7 @@ bool collection_visit(const COLLECTION *collection,
     return false;
 
   switch (collection->type) {
+    // o cast funciona porque ITEM * e void * tem a mesma representacao
     case COLLECTION_STACK:
       return stack_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
     case COLLECTION_QUEUE:
@@ -623,7 +629,6 @@ bool collection_visit(const COLLECTION *collection,
   }
 }
 
-/* Encaminha o ponteiro genérico à função de visita que recebe ITEM *. */
 static bool collection_cross_visit_adapter(int i, int j, void *item, void *context) {
   (void)i;
   (void)j;
@@ -640,6 +645,7 @@ bool collection_visit_cross_index(const COLLECTION *collection,
 
   COLLECTION_VISIT_CONTEXT visit_context = {visitor, context};
   CROSSED_LIST *crossed = collection->impl;
+  // primeiro indice percorre por linha, segundo por coluna
   bool is_row = !second_index;
   int line_count = crossed_list_capacity(crossed, is_row);
   for (int index = 0; index < line_count; index++) {

@@ -1,4 +1,4 @@
-/* Armazena campos dos itens e controla sua propriedade e liberação. */
+// item e so uma lista de pares nome/valor em texto, o store e dono de tudo
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -13,23 +13,23 @@ typedef struct {
 } FIELD;
 
 struct item_ {
-  FIELD *fields;    /* Campos textuais do item. */
-  size_t count;     /* Campos atualmente armazenados. */
-  size_t capacity;  /* Capacidade alocada para os campos. */
+  FIELD *fields;
+  size_t count;
+  size_t capacity;
 };
 
 struct item_store {
-  ITEM **items;     /* Itens cuja memória pertence ao armazenamento. */
-  size_t count;     /* Itens registrados no armazenamento. */
-  size_t capacity;  /* Capacidade alocada para os ponteiros. */
+  ITEM **items;
+  size_t count;
+  size_t capacity;
 };
 
 static bool store_add(ITEM_STORE *store, ITEM *item);
 
-/* Cria uma cópia independente da string, incluindo o terminador nulo. */
+// strdup na mao, nao quis depender do posix
 static char *copy_string(const char *s)
 {
-  size_t n = strlen(s) + 1;          /* Inclui espaço para o terminador nulo. */
+  size_t n = strlen(s) + 1;
   char *p = malloc(n);
   if (p != NULL)
     memcpy(p, s, n);
@@ -114,13 +114,13 @@ bool item_get_number(const ITEM *item, const char *name, double *value){
   char *fim;
   double x = strtod(texto, &fim);
   if (fim == texto)
-    return false;            /* strtod não converteu nenhum caractere. */
+    return false; // nada numerico no comeco
 
   while (isspace((unsigned char)*fim))
     fim++;
 
   if (*fim != '\0')
-    return false;      /* Há caracteres não numéricos após o valor. */
+    return false; // sobrou lixo depois do numero
 
   *value = x;
   return true;
@@ -137,7 +137,7 @@ const char *item_field_value(const ITEM *item, size_t index){
   return (item == NULL || index >= item->count) ? NULL : item->fields[index].value;
 }
 
-/* Registra o ITEM para que o armazenamento assuma sua liberação. */
+// depois de registrado so o store_destroy libera o item
 static bool store_add(ITEM_STORE *store, ITEM *item){
   if(store == NULL || item == NULL)
     return false;

@@ -1,4 +1,4 @@
-/* Implementa uma fila encadeada com inserção no fim e remoção no início. */
+// fila ligada, entra pelo back e sai pelo front
 #include <stdlib.h>
 #include "../include/queue.h"
 

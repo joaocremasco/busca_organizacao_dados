@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=c11 -Wall -Wextra -pedantic -MMD -MP -Iinclude -Idata_structures/include
+CFLAGS = -std=c99 -Wall -Wextra -pedantic -MMD -MP -Iinclude -Idata_structures/include
 LDLIBS = -lm
 ARGS ?=
 PROGRAMA = trabalho

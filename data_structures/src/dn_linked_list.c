@@ -1,4 +1,4 @@
-/* Implementa uma lista encadeada com nó sentinela permanente. */
+// lista com no sentinela no comeco, front nunca guarda objeto
 #include <stdlib.h>
 #include "../include/dn_linked_list.h"
 

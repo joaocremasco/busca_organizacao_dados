@@ -1,4 +1,4 @@
-/* Exporta itens para CSV mantendo a ordem e os nomes das colunas de origem. */
+// escreve o resultado em csv com as mesmas colunas do arquivo de entrada
 
 #include "export.h"
 
@@ -12,7 +12,7 @@ typedef struct {
     bool failed;
 } WriteContext;
 
-/* Escapa o campo entre aspas quando contém delimitador, aspas ou quebra de linha. */
+// so poe aspas se precisar, aspas dentro do valor viram aspas duplas
 static bool write_csv_field(FILE *file, const char *value, char delimiter) {
     const char *character;
     bool needs_quotes = false;
@@ -42,7 +42,7 @@ static bool write_csv_field(FILE *file, const char *value, char delimiter) {
     return !needs_quotes || fputc('"', file) != EOF;
 }
 
-/* Escreve o cabeçalho ou um registro na ordem das colunas lidas. */
+// item NULL escreve o cabecalho
 static bool write_csv_record(FILE *file, const READER *reader, const ITEM *item) {
     size_t column_index;
     char delimiter = reader_delimiter(reader);
@@ -61,7 +61,7 @@ static bool write_csv_record(FILE *file, const READER *reader, const ITEM *item)
     return fputc('\n', file) != EOF;
 }
 
-/* Controla o limite top-k; false interrompe o percurso ao atingir o limite. */
+// record_limit 0 quer dizer sem limite, devolve false pra parar a visita
 static bool write_item(ITEM *item, void *context) {
     WriteContext *write_context = context;
 

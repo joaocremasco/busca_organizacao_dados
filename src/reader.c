@@ -1,4 +1,4 @@
-/* Lê registros CSV e cria ITEMs no armazenamento compartilhado. */
+// leitor de csv, cada linha vira um ITEM no store
 #include "../include/reader.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,13 +7,13 @@
 struct reader {
   char *path;
   char *reader_name;
-  FILE *file;            /* o CSV aberto */
-  char delimiter;        /* ',' ou ';' ou tab, detectado no cabeçalho */
-  char **columns;        /* nomes das colunas (cada um alocado) */
+  FILE *file;
+  char delimiter; // virgula, ponto e virgula ou tab, detectado no cabecalho
+  char **columns;
   size_t column_count;
-  char *line;             /* buffer da linha, reaproveitado a cada reader_next */
+  char *line; // reaproveitado a cada reader_next
   size_t line_capacity;
-  char error[256];       /* mensagem do último erro */
+  char error[256];
 };
 
 static char *copy_string(const char *text) {
@@ -26,7 +26,27 @@ static char *copy_string(const char *text) {
     return copy;
 }
 
-/* Lê um registro completo, incluindo quebras de linha dentro de aspas. */
+// garante espaco pra mais extra chars e o terminador, devolve false se faltar memoria
+static int grow_line(READER *reader, size_t length, size_t extra) {
+    size_t capacity = reader->line_capacity;
+
+    while (length + extra >= capacity)
+        capacity *= 2;
+
+    if (capacity != reader->line_capacity) {
+        char *line = realloc(reader->line, capacity);
+        if (line == NULL) {
+            snprintf(reader->error, sizeof(reader->error), "Falha ao ampliar o buffer da linha");
+            return 0;
+        }
+        reader->line = line;
+        reader->line_capacity = capacity;
+    }
+    return 1;
+}
+
+/* le um registro inteiro, \n dentro de aspas nao termina a linha
+   devolve 1 ok, 0 fim do arquivo, -1 erro */
 static int read_line(READER *reader) {
     size_t length = 0;
     int in_quotes = 0;
@@ -46,50 +66,30 @@ static int read_line(READER *reader) {
         if (c == '\n' && !in_quotes)
             break;
 
+        int pair = 0;
+
         if (c == '"') {
             if (in_quotes) {
                 int next = fgetc(reader->file);
                 if (next == '"') {
-                    if (length + 2 >= reader->line_capacity)
-                        goto grow_for_pair;
-                    reader->line[length++] = '"';
-                    reader->line[length++] = '"';
-                    continue;
+                    // aspas dobrada ocupa 2 posicoes no buffer
+                    pair = 1;
+                } else {
+                    in_quotes = 0;
+                    if (next != EOF)
+                        ungetc(next, reader->file);
                 }
-                in_quotes = 0;
-                if (next != EOF)
-                    ungetc(next, reader->file);
             } else {
                 in_quotes = 1;
             }
         }
 
-        if (length + 1 >= reader->line_capacity) {
-            size_t capacity = reader->line_capacity * 2;
-            char *line = realloc(reader->line, capacity);
-            if (line == NULL) {
-                snprintf(reader->error, sizeof(reader->error), "Falha ao ampliar o buffer da linha");
-                return -1;
-            }
-            reader->line = line;
-            reader->line_capacity = capacity;
-        }
-        reader->line[length++] = (char)c;
-        continue;
+        if (!grow_line(reader, length, pair ? 2 : 1))
+            return -1;
 
-grow_for_pair:
-        {
-            size_t capacity = reader->line_capacity * 2;
-            char *line = realloc(reader->line, capacity);
-            if (line == NULL) {
-                snprintf(reader->error, sizeof(reader->error), "Falha ao ampliar o buffer da linha");
-                return -1;
-            }
-            reader->line = line;
-            reader->line_capacity = capacity;
+        reader->line[length++] = (char)c;
+        if (pair)
             reader->line[length++] = '"';
-            reader->line[length++] = '"';
-        }
     }
 
     if (ferror(reader->file)) {
@@ -108,7 +108,7 @@ grow_for_pair:
     return 1;
 }
 
-/* Conta delimitadores fora de campos entre aspas. */
+// escolhe o delimitador que mais aparece fora das aspas
 static char detect_delimiter(const char *line) {
     const char candidates[] = {',', ';', '\t'};
     size_t counts[3] = {0, 0, 0};
@@ -133,7 +133,9 @@ static char detect_delimiter(const char *line) {
     return candidates[best];
 }
 
-/* Separa campos respeitando aspas e grava os valores no próprio buffer da linha. */
+/* edita a linha no lugar, os valores apontam pra dentro dela
+   entao so valem ate a proxima leitura
+   devolve 0 se as aspas estiverem mal formadas */
 static int split_record(char *line, char delimiter, char ***values_out, size_t *count_out) {
     size_t capacity = 8, count = 0;
     char **values = malloc(capacity * sizeof(*values));
@@ -177,7 +179,7 @@ static int split_record(char *line, char delimiter, char ***values_out, size_t *
     return 1;
 }
 
-/* Detecta o delimitador, corrige o cabeçalho específico de games e guarda as colunas. */
+// o primeiro registro e o cabecalho
 static int read_header(READER *reader) {
     size_t values_count;
 
@@ -193,7 +195,7 @@ static int read_header(READER *reader) {
         return 0;
     }
 
-    /* Corrige no cabeçalho de games os nomes de duas colunas unidos em uma célula. */
+    // no games.csv duas colunas vem coladas (DiscountDLC count) entao separa
     if (strcmp(reader->reader_name, "games") == 0) {
         for (size_t i = 0; i < values_count; ++i) {
             if (strcmp(values[i], "DiscountDLC count") == 0) {
