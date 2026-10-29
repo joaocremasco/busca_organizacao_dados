@@ -1,0 +1,89 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 533 245] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1607 >>
+stream
+0.82 G 0.4 w
+48 50.00 m 493 50.00 l S
+BT /F1 7 Tf 25.00 48.00 Td (0) Tj ET
+0.82 G 0.4 w
+48 86.25 m 493 86.25 l S
+BT /F1 7 Tf 25.00 84.25 Td (5) Tj ET
+0.82 G 0.4 w
+48 122.50 m 493 122.50 l S
+BT /F1 7 Tf 25.00 120.50 Td (10) Tj ET
+0.82 G 0.4 w
+48 158.75 m 493 158.75 l S
+BT /F1 7 Tf 25.00 156.75 Td (15) Tj ET
+0.82 G 0.4 w
+48 195.00 m 493 195.00 l S
+BT /F1 7 Tf 25.00 193.00 Td (20) Tj ET
+0.75 g
+66 50 38 0.75 re f
+0 G 0.5 w
+66 50 38 0.75 re S
+BT /F1 7 Tf 64.00 54.75 Td (0.10) Tj ET
+BT /F1 6 Tf 63.00 37.00 Td (array_list) Tj ET
+BT /F1 6 Tf 67.00 27.00 Td (\(93\)) Tj ET
+0.38 g
+138 50 38 112.94 re f
+0 G 0.5 w
+138 50 38 112.94 re S
+BT /F1 7 Tf 136.00 166.94 Td (15.58) Tj ET
+BT /F1 6 Tf 135.00 37.00 Td (ordered_list) Tj ET
+BT /F1 6 Tf 139.00 27.00 Td (\(5.501\)) Tj ET
+0.12 g
+210 50 38 3.77 re f
+0 G 0.5 w
+210 50 38 3.77 re S
+BT /F1 7 Tf 208.00 57.77 Td (0.52) Tj ET
+BT /F1 6 Tf 207.00 37.00 Td (crossed_list) Tj ET
+BT /F1 6 Tf 211.00 27.00 Td (\(12.919\)) Tj ET
+0.55 g
+282 50 38 18.75 re f
+0 G 0.5 w
+282 50 38 18.75 re S
+BT /F1 7 Tf 280.00 72.75 Td (2.59) Tj ET
+BT /F1 6 Tf 279.00 37.00 Td (generalized_list) Tj ET
+BT /F1 6 Tf 283.00 27.00 Td (\(6.145\)) Tj ET
+0.12 g
+354 50 38 10.90 re f
+0 G 0.5 w
+354 50 38 10.90 re S
+BT /F1 7 Tf 352.00 64.90 Td (1.50) Tj ET
+BT /F1 6 Tf 351.00 37.00 Td (crossed_list) Tj ET
+BT /F1 6 Tf 355.00 27.00 Td (\(43\)) Tj ET
+0.38 g
+426 50 38 16.80 re f
+0 G 0.5 w
+426 50 38 16.80 re S
+BT /F1 7 Tf 424.00 70.80 Td (2.32) Tj ET
+BT /F1 6 Tf 423.00 37.00 Td (ordered_list) Tj ET
+BT /F1 6 Tf 427.00 27.00 Td (\(43\)) Tj ET
+BT /F1 8 Tf 208.00 12.00 Td (Insercao por item \(us\)) Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1969
+%%EOF

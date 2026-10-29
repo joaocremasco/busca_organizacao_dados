@@ -225,6 +225,16 @@ void* ord_list_erase(ORD_LIST* sq, void *object) {
 	return obj;
 }
 
+void* ord_list_erase_at(ORD_LIST *sq, int idx) {
+	if(sq == NULL || idx < 0 || idx >= sq->size)
+		return NULL;
+	void *obj = sq->array[idx];
+	for(int i = idx + 1; i < sq->size; i++)
+		sq->array[i - 1] = sq->array[i];
+	sq->size--;
+	return obj;
+}
+
 void* ord_list_get(ORD_LIST *sq, int idx) {
 	if(sq == NULL || idx < 0 || idx >= sq->size)
 		return NULL;

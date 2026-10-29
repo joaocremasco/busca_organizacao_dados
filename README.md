@@ -6,6 +6,10 @@ Use estes nomes nos argumentos `--base` e `--result`: `stack`, `queue`,
 `array_list`, `linked_list`, `sentinel_list`, `ordered_list`,
 `generalized_list` e `crossed_list`.
 
+## Testes
+
+Rode `make test` para verificar as operações e a ordem de percurso das oito estruturas.
+
 ## Arquivo de consulta
 
 O módulo `query` lê uma consulta de texto linha a linha. Os nomes dos campos

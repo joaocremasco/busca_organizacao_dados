@@ -224,6 +224,8 @@ bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow) {
 bool crossed_list_insert(CROSSED_LIST *list, int i, int j, void *object) {
 	if(list == NULL || object == NULL || i < 0 || i >= list->row_cap || j < 0 || j >= list->col_cap)
 		return false;
+	if(crossed_list_find_node(list, i, j) != NULL)
+		return false;
 
 	NODE *left = crossed_list_iterate_right(list, i, j);
 	NODE *right = left != NULL ? left->right : list->rows[i];

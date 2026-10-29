@@ -7,31 +7,33 @@ typedef struct ord_list_ ORD_LIST;
 typedef int (*ORD_LIST_COMPARE)(void *left, void *right, void *context);
 
 ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*));
-// o contexto e repassado pro comparador
+// passa o contexto para a funcao de comparacao
 ORD_LIST* ord_list_init_with_context(void (*destroy)(void*),
                                      ORD_LIST_COMPARE cmp, void *context);
-// se tiver destroy chama em cada objeto, mas aqui quem libera os itens e o ITEM_STORE
+// o liberador recebe cada objeto ao destruir a estrutura
 void ord_list_destroy(ORD_LIST **sq);
 
 bool ord_list_insert(ORD_LIST *sq, void *object);
 // so tira da lista, o objeto continua vivo
 void* ord_list_erase(ORD_LIST *sq, void *target);
+// remove pelo indice sem liberar o objeto
+void* ord_list_erase_at(ORD_LIST *sq, int idx);
 
-// se encolher perde os itens do fim
+// ao encolher, remove os objetos que ficam fora da capacidade
 bool ord_list_resize(ORD_LIST *sq, int capacity);
 void* ord_list_get(ORD_LIST *sq, int idx);
 
-// busca binaria, devolve o indice ou -1
+// busca binaria pelo valor de comparacao
 int ord_list_find(ORD_LIST *sq, void *target);
-// primeiro indice com chave maior que a do alvo
+// devolve a primeira posicao depois das chaves iguais
 int ord_list_upper_bound(ORD_LIST *sq, void *target);
-// primeiro indice com chave nao menor que a do alvo
+// devolve a primeira posicao com chave igual ou maior
 int ord_list_lower_bound(ORD_LIST *sq, void *target);
 
 int ord_list_size(ORD_LIST *sq);
 bool ord_list_empty(ORD_LIST *sq);
 
-// se o visitor devolver false ja para por ali
+// interrompe o percurso quando a funcao devolve falso
 bool ord_list_visit(ORD_LIST *sq, 
 		bool (*visitor)(void *object, void *context), void *context);
 

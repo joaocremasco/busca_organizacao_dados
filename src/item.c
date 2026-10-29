@@ -56,6 +56,7 @@ ITEM *item_create(ITEM_STORE *store, size_t field_capacity)
   }
 
   if(!store_add(store, item)){
+    free(item->fields);
     free(item);
     return NULL;
   }

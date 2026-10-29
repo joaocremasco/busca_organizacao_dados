@@ -1,5 +1,3 @@
-// escreve o resultado em csv com as mesmas colunas do arquivo de entrada
-
 #include "export.h"
 
 #include <stdio.h>

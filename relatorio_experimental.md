@@ -13,13 +13,13 @@ Cada configuração teve uma execução de aquecimento descartada e três execu�
 
 O executável foi recompilado com `make -B`, usando as flags do Makefile, sem erros ou avisos. Antes de cada configuração foi feita uma execução descartada para aquecer o processo e o acesso aos arquivos. A medição usa `clock()` da biblioteca padrão C. Portanto, os valores representam tempo de CPU consumido pelo processo, em milissegundos, e não tempo decorrido de relógio. Esperas por leitura e escrita em disco não são contabilizadas como tempo de CPU; os resultados não representam a latência total percebida.
 
-O ambiente foi um Intel Core i5-10210U, 4 núcleos e 8 threads, Linux x86_64 com kernel 7.0.0-38-generic, e 15 GiB de RAM. No snapshot imediatamente anterior à série, havia 1 usuário conectado, carga média do sistema de 0,94 / 0,55 / 0,34 e 9,9 GiB de memória disponível. A lista de processos visível mostrava `codex` e `bash` ativos; portanto, não foi possível garantir isolamento completo nem observar processos fora do ambiente. A carga concorrente é uma possível fonte de variação, mas estes dados não permitem atribuir a ela a diferença entre séries.
+O ambiente foi um Intel Core i5-10210U, 4 núcleos e 8 threads, Linux x86_64 com kernel 7.0.0-38-generic e 15 GiB de RAM. A máquina não estava isolada. Não foi registrado um snapshot de carga do sistema imediatamente antes desta série, então não dá para separar a variação do programa da atividade concorrente.
 
 O programa mede carga, busca, inserção dos resultados e escrita. Na busca, `collection_visit` avalia os critérios, grava `similarity` e guarda ponteiros dos aceitos em um vetor. A inserção dos resultados acontece depois, numa segunda passada; um único par de chamadas a `clock()` envolve o laço inteiro de inserções. Assim, `SEARCH_MS` não inclui a inserção dos resultados, e `RESULT_INSERT_MS` não soma uma medição de relógio por item. A coluna total é a soma das médias arredondadas exibidas para as quatro fases; o desvio padrão do total é calculado sobre a soma das fases em cada repetição.
 
 ## 2. Complexidade das operações
 
-Considere `n` itens, `k` itens exportados, `p` campos por item, `g` grupos, `s` subgrupos examinados no grupo correspondente, `m` itens no subgrupo, `r` e `c` chaves distintas da lista cruzada e `dᵣ` e `d꜀` os nós percorridos na linha e coluna. As estimativas abaixo consideram operações sobre ponteiros e chaves de tamanho limitado; comparações de texto também dependem do comprimento das strings.
+Considere `n` itens, `k` itens exportados, `p` campos por item, `g` grupos, `s` subgrupos examinados no grupo correspondente, `m` itens no subgrupo, `r` e `c` chaves distintas da lista cruzada, `h` itens no bucket de uma célula e `dᵣ` e `d꜀` os nós percorridos na linha e coluna. As estimativas abaixo consideram operações sobre ponteiros e chaves de tamanho limitado; comparações de texto também dependem do comprimento das strings.
 
 | Estrutura | Inserção usada na coleção | Busca/percurso | Remoção pela interface da coleção |
 |---|---:|---:|---:|
@@ -30,9 +30,9 @@ Considere `n` itens, `k` itens exportados, `p` campos por item, `g` grupos, `s` 
 | Lista com sentinela (`sentinel_list`) | O(1) no fim | O(n) | O(n) para localizar; O(1) para desvincular após localizar |
 | Lista ordenada (`ordered_list`) | O(n), incluindo deslocamentos | O(log n) para localizar pela chave de ordem; O(n) para percorrer | O(n), devido ao deslocamento |
 | Lista generalizada (`generalized_list`) | O(g+s) para localizar/criar grupo e subgrupo, mais O(1) para anexar | O(n) para percorrer itens | O(g+s+m) para localizar e remover; a remoção também elimina grupos que ficam vazios |
-| Lista cruzada (`crossed_list`) | O(r+c+dᵣ+d꜀) para localizar chaves e posição de inserção | O(n) para percurso total; O(dᵣ) ou O(d꜀) por linha ou coluna | O(n) pela interface da coleção, que primeiro localiza o item; O(dᵣ) para remoção direta por coordenada |
+| Lista cruzada (`crossed_list`) | O(r+c+dᵣ+d꜀) para localizar chaves e uma célula nova; O(r+c) para anexar a célula existente | O(n) para percurso total; O(dᵣ) ou O(d꜀) por linha ou coluna | O(r+c+h) para localizar as chaves e o item no bucket |
 
-Pilha e fila restringem a remoção ao topo e à frente, respectivamente. Na lista ordenada, a posição pode ser encontrada por busca binária, mas inserir ou remover exige deslocar elementos do vetor. A lista generalizada procura linearmente as chaves dos grupos e subgrupos. A lista cruzada guarda um nó por item, encadeado nas duas dimensões; a inclusão também procura ou cria as chaves de linha e coluna.
+Pilha e fila restringem a remoção ao topo e à frente, respectivamente. Na lista ordenada, a posição pode ser encontrada por busca binária, mas inserir ou remover exige deslocar elementos do vetor. A lista generalizada procura linearmente as chaves dos grupos e subgrupos. A lista cruzada guarda um nó por par de chaves, encadeado nas duas dimensões; na coleção, esse nó aponta para um bucket com os itens que compartilham o par.
 
 O custo do programa inclui o acesso aos campos do item: `item_get` percorre linearmente os `p` campos. Assim, para `f` filtros e `q` critérios `SIM`, a avaliação da consulta é O(n(f+q)p), sem contar os comprimentos dos textos e conversões numéricas. A gravação do campo `similarity` para cada item aceito também percorre campos existentes. A complexidade total da carga e das inserções nos resultados depende da estrutura escolhida, conforme a tabela.
 
@@ -50,26 +50,26 @@ No dataset de asteroides, o limite de 50.000 interrompe a carga antes do fim da 
 
 | N carregado | k | Carga (ms) | Busca (ms) | Inserção res. (ms) | Saída (ms) | Total (ms) | Encontrados / exportados |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1.000 | 10 | 5,699 ± 0,169 | 1,150 ± 0,069 | 0,012 ± 0,001 | 0,168 ± 0,006 | 7,029 ± 0,234 | 649 / 10 |
-| 5.000 | 50 | 29,364 ± 0,602 | 6,459 ± 0,119 | 0,055 ± 0,005 | 0,429 ± 0,027 | 36,307 ± 0,679 | 3.195 / 50 |
-| 10.000 | 100 | 67,925 ± 2,997 | 14,822 ± 1,804 | 0,135 ± 0,015 | 0,719 ± 0,051 | 83,601 ± 3,993 | 6.323 / 100 |
-| 25.000 | 500 | 152,901 ± 8,575 | 30,986 ± 2,160 | 0,314 ± 0,060 | 3,076 ± 0,443 | 187,277 ± 10,771 | 15.249 / 500 |
-| 50.000 | 1.000 | 302,871 ± 43,547 | 59,616 ± 1,928 | 0,459 ± 0,007 | 5,219 ± 0,093 | 368,165 ± 41,908 | 24.012 / 1.000 |
-| 89.227 (toda) | todos | 487,674 ± 31,418 | 106,991 ± 4,590 | 0,770 ± 0,064 | 189,593 ± 12,134 | 785,028 ± 46,981 | 39.380 / 39.380 |
+| 1.000 | 10 | 12,150 ± 0,148 | 3,075 ± 0,816 | 0,028 ± 0,001 | 0,376 ± 0,071 | 15,629 ± 0,785 | 649 / 10 |
+| 5.000 | 50 | 28,606 ± 0,854 | 6,070 ± 0,123 | 0,053 ± 0,001 | 0,420 ± 0,003 | 35,149 ± 0,965 | 3.195 / 50 |
+| 10.000 | 100 | 56,270 ± 3,523 | 11,929 ± 0,552 | 0,112 ± 0,002 | 0,661 ± 0,049 | 68,972 ± 3,846 | 6.323 / 100 |
+| 25.000 | 500 | 155,548 ± 5,775 | 30,834 ± 2,016 | 0,306 ± 0,006 | 3,269 ± 0,833 | 189,957 ± 6,804 | 15.249 / 500 |
+| 50.000 | 1.000 | 332,364 ± 49,712 | 69,944 ± 7,257 | 0,590 ± 0,057 | 6,951 ± 0,442 | 409,849 ± 57,150 | 24.012 / 1.000 |
+| 89.227 (toda) | todos | 434,041 ± 12,547 | 103,079 ± 8,536 | 0,839 ± 0,129 | 191,707 ± 18,858 | 729,666 ± 12,017 | 39.380 / 39.380 |
 
 ### Jogos (`linked_list` → `array_list`)
 
 | N carregado | k | Carga (ms) | Busca (ms) | Inserção res. (ms) | Saída (ms) | Total (ms) | Encontrados / exportados |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1.000 | 10 | 54,808 ± 6,681 | 1,833 ± 0,099 | 0,019 ± 0,002 | 0,571 ± 0,029 | 57,231 ± 6,807 | 1.000 / 10 |
-| 5.000 | 50 | 242,869 ± 16,336 | 8,035 ± 0,341 | 0,073 ± 0,004 | 1,833 ± 0,060 | 252,810 ± 16,442 | 4.998 / 50 |
-| 10.000 | 100 | 521,382 ± 21,921 | 18,584 ± 2,592 | 0,189 ± 0,044 | 3,656 ± 0,214 | 543,811 ± 22,265 | 9.996 / 100 |
-| 25.000 | 500 | 1.218,237 ± 98,697 | 46,107 ± 0,925 | 0,517 ± 0,037 | 19,659 ± 1,288 | 1.284,520 ± 96,737 | 24.989 / 500 |
-| 50.000 | 1.000 | 2.417,263 ± 73,895 | 96,717 ± 1,906 | 0,997 ± 0,014 | 38,279 ± 1,489 | 2.553,256 ± 73,829 | 49.978 / 1.000 |
-| 125.855 (toda) | todos | 6.083,020 ± 92,066 | 248,654 ± 7,381 | 2,420 ± 0,066 | 4.063,851 ± 10,327 | 10.397,945 ± 80,809 | 125.811 / 125.811 |
+| 1.000 | 10 | 62,656 ± 3,973 | 2,507 ± 1,323 | 0,019 ± 0,003 | 0,603 ± 0,052 | 65,785 ± 5,257 | 1.000 / 10 |
+| 5.000 | 50 | 245,154 ± 2,946 | 7,924 ± 0,222 | 0,080 ± 0,009 | 2,010 ± 0,192 | 255,168 ± 3,007 | 4.998 / 50 |
+| 10.000 | 100 | 490,325 ± 35,630 | 19,631 ± 0,230 | 0,180 ± 0,006 | 4,009 ± 0,138 | 514,145 ± 35,589 | 9.996 / 100 |
+| 25.000 | 500 | 1.201,504 ± 59,925 | 43,898 ± 0,777 | 0,524 ± 0,020 | 19,399 ± 1,924 | 1.265,325 ± 59,430 | 24.989 / 500 |
+| 50.000 | 1.000 | 2.402,729 ± 55,795 | 98,035 ± 7,579 | 1,086 ± 0,170 | 38,935 ± 2,185 | 2.540,785 ± 49,296 | 49.978 / 1.000 |
+| 125.855 (toda) | todos | 6.193,084 ± 105,172 | 246,937 ± 14,470 | 2,433 ± 0,087 | 4.342,640 ± 78,843 | 10.785,094 ± 85,417 | 125.811 / 125.811 |
 
 ## 5. Discussão
 
-Os tempos de carga e busca aumentam conforme cresce o número de registros, em linha com o percurso linear da base. A carga de jogos consome mais CPU que a de asteroides, em parte pelo maior número e tamanho dos campos. A inserção em bloco evita que o custo de chamar `clock()` para cada item domine a fase: na base completa, a média de inserção é 0,770 ms para 39.380 resultados de asteroides e 2,420 ms para 125.811 resultados de jogos. A lista sequencial acrescenta ao fim em tempo amortizado constante. Quando todos os itens correspondentes são exportados, a escrita cresce com o número e o tamanho dos registros serializados.
+Os tempos de carga e busca aumentam com o número de registros, conforme o percurso linear da base. Na base completa, carga, busca, inserção e escrita representam 59,48%, 14,13%, 0,11% e 26,27% para asteroides, e 57,42%, 2,29%, 0,02% e 40,27% para jogos. A inserção em bloco custa 0,839 ms para 39.380 itens aceitos em asteroides e 2,433 ms para 125.811 em jogos.
 
-Nas bases completas, carga, busca, inserção e escrita representam, respectivamente, 62,12%, 13,63%, 0,10% e 24,15% do total de CPU para asteroides; para jogos, 58,50%, 2,39%, 0,02% e 39,08%. Os percentuais são calculados com as médias das fases. Há variação entre execuções, especialmente na carga: o desvio padrão da carga completa foi 31,418 ms em asteroides e 92,066 ms em jogos. Como o snapshot mostrou atividade de processos além do programa medido e a máquina não estava isolada, a comparação com séries anteriores deve ser feita com cautela. `clock()` mede tempo de CPU, não espera por disco nem tempo decorrido. O experimento mantém as estruturas fixas (`linked_list` → `array_list`); avalia o crescimento com N e k, mas não compara todas as combinações de TADs.
+A carga completa teve desvio padrão de 12,547 ms em asteroides e 105,172 ms em jogos. Para asteroides com N=50.000, uma amostra de carga foi 275,523 ms, enquanto as outras foram 353,849 e 367,719 ms; as três foram mantidas. As amostras são poucas e não permitem decidir se há outlier nem atribuir a diferença à máquina. `clock()` mede tempo de CPU, não tempo decorrido. O experimento mantém `linked_list` como base e `array_list` como resultado, e foi feito numa só máquina.

@@ -30,6 +30,7 @@ struct collection {
   size_t cross_row_count;
   char **cross_columns;
   size_t cross_column_count;
+  size_t cross_item_count;
 };
 
 typedef struct {
@@ -110,6 +111,11 @@ typedef struct {
   char *key;
   GEN_LIST *items;
 } SubgroupEntry;
+
+static void destroy_cross_cell(void *object) {
+  GEN_LIST *items = object;
+  gen_list_destroy(&items);
+}
 
 // os itens nao sao liberados aqui
 static void destroy_subgroup(void *object) {
@@ -227,6 +233,7 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
   collection->cross_row_count = 0;
   collection->cross_columns = NULL;
   collection->cross_column_count = 0;
+  collection->cross_item_count = 0;
 
   switch (type) {
     case COLLECTION_STACK:
@@ -256,7 +263,7 @@ COLLECTION *collection_create(COLLECTION_TYPE type,
       break;
 
     case COLLECTION_CROSS_LIST:
-      collection->impl = crossed_list_init(NULL);
+      collection->impl = crossed_list_init(destroy_cross_cell);
       break;
 
     case COLLECTION_GROUPED_LIST:
@@ -393,7 +400,22 @@ bool collection_insert(COLLECTION *collection, ITEM *item) {
             !crossed_list_resize(crossed, (int)collection->cross_row_count, true) ||
             !crossed_list_resize(crossed, (int)collection->cross_column_count, false))
           return false;
-        return crossed_list_insert(crossed, row, column, item);
+        GEN_LIST *items = crossed_list_get(crossed, row, column);
+        if (items != NULL) {
+          if (!gen_list_push_back(items, item, true))
+            return false;
+        } else {
+          items = gen_list_init(NULL);
+          if (items == NULL)
+            return false;
+          if (!gen_list_push_back(items, item, true) ||
+              !crossed_list_insert(crossed, row, column, items)) {
+            gen_list_destroy(&items);
+            return false;
+          }
+        }
+        collection->cross_item_count++;
+        return true;
       }
 
     case COLLECTION_GROUPED_LIST:
@@ -474,7 +496,13 @@ bool collection_remove(COLLECTION *collection, ITEM *item) {
       return linked_list_erase(collection->impl, item, compare_item_pointers) == item;
 
     case COLLECTION_SORTED_LIST:
-      return ord_list_erase(collection->impl, item) == item;
+      {
+        ORD_LIST *ordered = collection->impl;
+        for (int index = 0; index < ord_list_size(ordered); ++index)
+          if (ord_list_get(ordered, index) == item)
+            return ord_list_erase_at(ordered, index) == item;
+        return false;
+      }
 
     case COLLECTION_SENTINEL_LIST:
       return dn_linked_list_erase(collection->impl, item, compare_item_pointers) == item;
@@ -482,10 +510,29 @@ bool collection_remove(COLLECTION *collection, ITEM *item) {
     case COLLECTION_CROSS_LIST:
       {
         CROSSED_LIST *crossed = collection->impl;
-        int row, column;
-        if (crossed_list_find(crossed, item, compare_item_pointers, &row, &column) != item)
+        const char *row_value = item_get(item, collection->cross_field);
+        const char *column_value = item_get(item, collection->cross_second_field);
+        int row = find_text_index(collection->cross_rows,
+                                  collection->cross_row_count,
+                                  row_value == NULL ? "" : row_value);
+        int column = find_text_index(collection->cross_columns,
+                                     collection->cross_column_count,
+                                     column_value == NULL ? "" : column_value);
+        bool atom;
+        GEN_LIST *items;
+        if (row < 0 || column < 0)
           return false;
-        return crossed_list_remove(crossed, row, column) == item;
+        items = crossed_list_get(crossed, row, column);
+        if (items == NULL || gen_list_erase(items, item, true,
+                                            compare_item_pointers_callback,
+                                            &atom) == NULL)
+          return false;
+        collection->cross_item_count--;
+        if (gen_list_empty(items)) {
+          (void)crossed_list_remove(crossed, row, column);
+          destroy_cross_cell(items);
+        }
+        return true;
       }
 
     case COLLECTION_GROUPED_LIST:
@@ -557,7 +604,7 @@ size_t collection_size(const COLLECTION *collection) {
       return dn_linked_list_size(collection->impl);
 
     case COLLECTION_CROSS_LIST:
-      return crossed_list_size(collection->impl);
+      return collection->cross_item_count;
 
     case COLLECTION_GROUPED_LIST:
       {
@@ -632,8 +679,7 @@ bool collection_visit(const COLLECTION *collection,
 static bool collection_cross_visit_adapter(int i, int j, void *item, void *context) {
   (void)i;
   (void)j;
-  COLLECTION_VISITOR visitor = ((COLLECTION_VISIT_CONTEXT *)context)->visitor;
-  return visitor(item, ((COLLECTION_VISIT_CONTEXT *)context)->context);
+  return gen_list_visit(item, visit_group_item, context);
 }
 
 bool collection_visit_cross_index(const COLLECTION *collection,

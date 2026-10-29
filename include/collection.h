@@ -24,7 +24,7 @@ typedef struct {
     const char *cross_second_field;
 } COLLECTION_OPTIONS;
 
-// options pode ser NULL
+// as opcoes podem ser nulas
 COLLECTION *collection_create(COLLECTION_TYPE type, const COLLECTION_OPTIONS *options);
 // nao libera os itens, quem libera e o ITEM_STORE
 void collection_destroy(COLLECTION **collection);
@@ -33,12 +33,12 @@ bool collection_insert(COLLECTION *collection, ITEM *item);
 // pilha e fila so removem o item do topo e do inicio
 bool collection_remove(COLLECTION *collection, ITEM *item);
 size_t collection_size(const COLLECTION *collection);
-// se o visitor devolver false ja para por ali
+// interrompe o percurso quando a funcao devolve falso
 bool collection_visit(const COLLECTION *collection, COLLECTION_VISITOR visitor, void *context);
-// so pra lista cruzada, percorre linha por linha ou coluna por coluna
+// percorre um indice da lista cruzada por linha ou coluna
 bool collection_visit_cross_index(const COLLECTION *collection, bool second_index,
                                   COLLECTION_VISITOR visitor, void *context);
-// aceita os nomes em ingles e os do enunciado
+// aceita os nomes em ingles e os nomes do enunciado
 bool collection_type_parse(const char *name, COLLECTION_TYPE *type);
 const char *collection_type_name(COLLECTION_TYPE type);
 
