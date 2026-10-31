@@ -16,6 +16,7 @@ struct reader {
   char error[256];
 };
 
+// Cópia da string em memória própria, ou NULL se faltar memória; strdup não é C11.
 static char *copy_string(const char *text) {
     size_t length = strlen(text) + 1;
     char *copy = malloc(length);

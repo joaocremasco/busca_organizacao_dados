@@ -86,6 +86,8 @@ static bool equals_ignore_case(const char *left, const char *right) {
     return *left == '\0' && *right == '\0';
 }
 
+// Troca *destination por uma cópia de source. O valor antigo só é liberado depois que a
+// cópia existe, então, se faltar memória, ele continua válido e a função devolve false.
 static bool replace_string(char **destination, const char *source) {
     char *copy = duplicate_text(source);
 
@@ -427,6 +429,8 @@ QUERY *query_load(const char *path, char *error, size_t error_size) {
     return query;
 }
 
+// Libera as strings e os vetores da consulta. Só deve ser chamada depois de destruir as
+// coleções criadas com query_collection_options, que guardam ponteiros para essas strings.
 void query_destroy(QUERY **query_ptr) {
     if (query_ptr == NULL || *query_ptr == NULL)
         return;
@@ -553,6 +557,8 @@ bool query_matches(const QUERY *query, ITEM *item, double *similarity) {
            overall_similarity >= query->acceptance_threshold;
 }
 
+// Monta as opções que o collection_create usa (ORDER, GROUP e CROSS). Os campos são
+// ponteiros para strings da própria QUERY, sem cópia; campos ausentes ficam NULL.
 COLLECTION_OPTIONS query_collection_options(const QUERY *query) {
     COLLECTION_OPTIONS options = {0};
 
@@ -569,6 +575,7 @@ COLLECTION_OPTIONS query_collection_options(const QUERY *query) {
     return options;
 }
 
+// GROUP e CROSS só valem quando os dois campos foram informados.
 bool query_has_group(const QUERY *query) {
     return query != NULL &&
            query->group_field != NULL &&

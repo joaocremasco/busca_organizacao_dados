@@ -593,6 +593,8 @@ bool collection_remove(COLLECTION *collection, ITEM *item) {
   }
 }
 
+// Quantos itens a coleção guarda. A lista cruzada mantém um contador próprio e a
+// generalizada conta percorrendo grupos e subgrupos, já que os itens ficam em sublistas.
 size_t collection_size(const COLLECTION *collection) {
   if (collection == NULL)
     return 0;
@@ -654,6 +656,9 @@ static bool visit_groups(void *object, void *context) {
 
 static bool collection_cross_visit_adapter(int i, int j, void *item, void *context);
 
+// Percorre a coleção na ordem natural de cada estrutura e entrega um ITEM por vez ao
+// visitor, parando quando ele devolve false. Devolve false se o percurso foi
+// interrompido ou se algum argumento for inválido; context segue sem alteração.
 bool collection_visit(const COLLECTION *collection,
                       COLLECTION_VISITOR visitor,
                       void *context){
@@ -696,6 +701,9 @@ static bool collection_cross_visit_adapter(int i, int j, void *item, void *conte
   return gen_list_visit(item, visit_group_item, context);
 }
 
+// Só vale para a lista cruzada: com second_index falso percorre todas as linhas e,
+// com verdadeiro, todas as colunas, em ordem de índice. Para os outros tipos devolve
+// false, e também quando o visitor interrompe o percurso.
 bool collection_visit_cross_index(const COLLECTION *collection,
                                   bool second_index,
                                   COLLECTION_VISITOR visitor,
@@ -716,6 +724,8 @@ bool collection_visit_cross_index(const COLLECTION *collection,
   return true;
 }
 
+// Converte o nome recebido em --base ou --result para o tipo da coleção, aceitando os
+// nomes em inglês e os do enunciado. Devolve false se o nome não estiver na tabela.
 bool collection_type_parse(const char *name, COLLECTION_TYPE *type)
 {
   if (name == NULL || type == NULL)
@@ -730,6 +740,8 @@ bool collection_type_parse(const char *name, COLLECTION_TYPE *type)
   return false;
 }
 
+// Nome do tipo para mensagens. Como a tabela lista os nomes em inglês primeiro, é um
+// deles que sai; devolve "desconhecido" para um tipo fora da tabela.
 const char *collection_type_name(COLLECTION_TYPE type)
 {
   for (size_t i = 0; i < TYPE_COUNT; i++) {
