@@ -655,6 +655,7 @@ static bool visit_groups(void *object, void *context) {
 }
 
 static bool collection_cross_visit_adapter(int i, int j, void *item, void *context);
+static bool collection_visit_adapter(void *item, void *context);
 
 // Percorre a coleção na ordem natural de cada estrutura e entrega um ITEM por vez ao
 // visitor, parando quando ele devolve false. Devolve false se o percurso foi
@@ -666,19 +667,25 @@ bool collection_visit(const COLLECTION *collection,
     return false;
 
   switch (collection->type) {
-    // Os TADs recebem void *, enquanto a interface pública entrega ITEM *.
+    // O adaptador mantém compatíveis os tipos dos callbacks em C.
     case COLLECTION_STACK:
-      return stack_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+      return stack_visit(collection->impl, collection_visit_adapter,
+                         &(COLLECTION_VISIT_CONTEXT){visitor, context});
     case COLLECTION_QUEUE:
-      return queue_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+      return queue_visit(collection->impl, collection_visit_adapter,
+                         &(COLLECTION_VISIT_CONTEXT){visitor, context});
     case COLLECTION_ARRAY_LIST:
-      return seq_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+      return seq_list_visit(collection->impl, collection_visit_adapter,
+                            &(COLLECTION_VISIT_CONTEXT){visitor, context});
     case COLLECTION_LINKED_LIST:
-      return linked_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+      return linked_list_visit(collection->impl, collection_visit_adapter,
+                               &(COLLECTION_VISIT_CONTEXT){visitor, context});
     case COLLECTION_SENTINEL_LIST:
-      return dn_linked_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+      return dn_linked_list_visit(collection->impl, collection_visit_adapter,
+                                  &(COLLECTION_VISIT_CONTEXT){visitor, context});
     case COLLECTION_SORTED_LIST:
-      return ord_list_visit(collection->impl, (bool (*)(void *, void *))visitor, context);
+      return ord_list_visit(collection->impl, collection_visit_adapter,
+                            &(COLLECTION_VISIT_CONTEXT){visitor, context});
     case COLLECTION_CROSS_LIST: {
       COLLECTION_VISIT_CONTEXT visit_context = {visitor, context};
       return crossed_list_visit(collection->impl, collection_cross_visit_adapter,
@@ -692,6 +699,12 @@ bool collection_visit(const COLLECTION *collection,
     default:
       return false;
   }
+}
+
+// Converte o objeto genérico do TAD antes de chamar o visitor público.
+static bool collection_visit_adapter(void *item, void *context) {
+  COLLECTION_VISIT_CONTEXT *visit = context;
+  return visit->visitor(item, visit->context);
 }
 
 // A célula armazena um bucket GEN_LIST; este adaptador visita seus ITEMs.
