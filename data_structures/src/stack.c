@@ -1,4 +1,4 @@
-// pilha em vetor, topo e o ultimo indice
+// Pilha em vetor; o topo ocupa o último índice usado.
 #include <stdlib.h>
 #include "../include/stack.h"
 
@@ -11,6 +11,8 @@ struct stack_ {
 	void (*destroy)(void*);
 };
 
+// Cria uma pilha vazia; destroy é opcional e recebe os objetos na destruição.
+// Devolve NULL se alguma alocação falhar.
 STACK* stack_init(void (*destroy)(void*)) {
 
 	STACK *st = malloc(sizeof(*st));
@@ -47,7 +49,8 @@ void stack_destroy(STACK **st) {
 	*st = NULL;
 }
 
-// se capacity < size destroi os itens que sobrarem
+// Ao encolher, descarta os elementos fora da nova capacidade pelo callback.
+// Devolve false para capacidade inválida ou falha de realloc.
 static bool stack_resize(STACK *st, int capacity) {
 	if(st == NULL || capacity <= 0)
 		return false;
@@ -114,6 +117,7 @@ bool stack_empty(STACK *st) {
 	return st == NULL ? true : st->size == 0;
 }
 
+// Percorre do topo para a base; false indica argumento inválido ou parada do visitor.
 bool stack_visit(STACK *st, bool (*visitor)(void *object, void *context), void *context) {
 	if(st == NULL || visitor == NULL)
 		return false;

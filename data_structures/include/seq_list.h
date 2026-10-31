@@ -5,32 +5,32 @@
 
 typedef struct seq_list_ SEQ_LIST;
 
-// o liberador pode ser nulo quando a estrutura nao for dona dos objetos
+// destroy pode ser nulo quando os objetos forem administrados por outro módulo.
 SEQ_LIST* seq_list_init(void (*destroy)(void*));
-// o liberador recebe cada objeto ao destruir a estrutura
+// Chama destroy para cada objeto, se o callback tiver sido informado.
 void seq_list_destroy(SEQ_LIST **sq);
 
 bool seq_list_push_back(SEQ_LIST* sq, void *object);
-// remove da estrutura sem liberar o objeto
+// Remove e devolve o objeto sem chamar destroy.
 void* seq_list_pop_back(SEQ_LIST *sq);
 
-// desloca os itens a direita do indice
+// Abre uma posição em idx, deslocando os objetos seguintes para a direita.
 bool seq_list_insert(SEQ_LIST* sq, void *object, int idx);
-// ao encolher, remove os objetos que ficam fora da capacidade
+// Ao encolher, descarta os objetos que ficam fora da capacidade.
 bool seq_list_resize(SEQ_LIST *sq, int capacity);
-// puxa os itens da direita pra esquerda, o objeto continua vivo
+// Compacta o vetor após a remoção; o objeto devolvido continua válido.
 void* seq_list_erase(SEQ_LIST *sq, int idx);
 
 void* seq_list_get(SEQ_LIST *sq, int idx);
-// troca o objeto e devolve a referencia anterior
+// Substitui o objeto e devolve a referência anterior.
 void* seq_list_set(SEQ_LIST *sq, void *object, int idx);
-// devolve o indice ou -1
+// Devolve o índice encontrado ou -1 se não houver correspondência.
 int seq_list_find(SEQ_LIST *sq, void *object, int (*cmp)(void*, void*));
 
 int seq_list_size(SEQ_LIST *sq);
 bool seq_list_empty(SEQ_LIST *sq);
 
-// interrompe o percurso quando a funcao devolve falso
+// Para e devolve false se o visitor devolver false.
 bool seq_list_visit(SEQ_LIST *sq, bool (*visitor)(void *object, void *context), void *context);
 
 #endif

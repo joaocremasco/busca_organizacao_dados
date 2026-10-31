@@ -1,4 +1,4 @@
-// item e so uma lista de pares nome/valor em texto, o store e dono de tudo
+// Um ITEM guarda pares nome/valor; o ITEM_STORE controla seu ciclo de vida.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -26,7 +26,7 @@ struct item_store {
 
 static bool store_add(ITEM_STORE *store, ITEM *item);
 
-// strdup na mao, nao quis depender do posix
+// Duplica uma string sem depender da função strdup, que não faz parte do C99.
 static char *copy_string(const char *s)
 {
   size_t n = strlen(s) + 1;
@@ -36,6 +36,8 @@ static char *copy_string(const char *s)
   return p;
 }
 
+// Registra um ITEM no store com capacidade inicial para field_capacity campos.
+// Devolve NULL se o store for inválido ou alguma alocação falhar.
 ITEM *item_create(ITEM_STORE *store, size_t field_capacity)
 {
   ITEM *item = malloc(sizeof(*item));
@@ -65,6 +67,7 @@ ITEM *item_create(ITEM_STORE *store, size_t field_capacity)
 
 }
 
+// Acrescenta uma cópia do par name/raw_value; false indica entrada inválida ou falta de memória.
 bool item_set(ITEM *item, const char *name, const char *raw_value){
   if (item == NULL || name == NULL || raw_value == NULL)
     return false;
@@ -104,6 +107,7 @@ const char *item_get(const ITEM *item, const char *name){
   return NULL;
 }
 
+// Converte o campo inteiro para double e grava em value; false cobre campo ausente ou texto inválido.
 bool item_get_number(const ITEM *item, const char *name, double *value){
   if(value == NULL)
     return false;
@@ -115,13 +119,13 @@ bool item_get_number(const ITEM *item, const char *name, double *value){
   char *fim;
   double x = strtod(texto, &fim);
   if (fim == texto)
-    return false; // nada numerico no comeco
+    return false; // Não há número no início do campo.
 
   while (isspace((unsigned char)*fim))
     fim++;
 
   if (*fim != '\0')
-    return false; // sobrou lixo depois do numero
+    return false; // Há caracteres sobrando depois do número.
 
   *value = x;
   return true;
@@ -138,7 +142,7 @@ const char *item_field_value(const ITEM *item, size_t index){
   return (item == NULL || index >= item->count) ? NULL : item->fields[index].value;
 }
 
-// depois de registrado so o store_destroy libera o item
+// Acrescenta o ITEM ao vetor de propriedade do store; false indica entrada inválida ou falha de realloc.
 static bool store_add(ITEM_STORE *store, ITEM *item){
   if(store == NULL || item == NULL)
     return false;

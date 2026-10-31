@@ -1,4 +1,4 @@
-// lista generalizada, cada no e um item (atomo) ou uma sublista
+// Lista generalizada: cada nó guarda um átomo ou uma sublista.
 #include <stdlib.h>
 #include "../include/gen_list.h"
 
@@ -7,7 +7,7 @@ typedef struct node_ NODE;
 struct node_ {
 	NODE *next;
 	NODE *prev;
-	bool atom; // false e sublista
+	bool atom; // false indica uma sublista
 	void *object;
 };
 
@@ -18,12 +18,14 @@ struct gen_list_ {
 	void (*destroy)(void*);
 };
 
-// isAtom e opcional entao testa NULL antes
+// Atualiza isAtom apenas quando o chamador pediu essa informação.
 static void set_atom(bool *ptr, bool v) {
 	if(ptr != NULL)
 		*ptr = v;
 }
 
+// Cria uma lista vazia; destroy é aplicado aos átomos ao destruir a estrutura.
+// Devolve NULL se não houver memória. No projeto, os ITEMs pertencem ao ITEM_STORE.
 GEN_LIST* gen_list_init(void (*destroy)(void*)) {
 
 	GEN_LIST *list = malloc(sizeof(*list));
@@ -39,6 +41,8 @@ GEN_LIST* gen_list_init(void (*destroy)(void*)) {
 	return list;
 }
 
+// Libera os nós e as sublistas; para átomos, usa o callback opcional.
+// Os ITEMs do projeto continuam sob responsabilidade do ITEM_STORE.
 void gen_list_destroy(GEN_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
@@ -62,6 +66,8 @@ void gen_list_destroy(GEN_LIST **list) {
 	*list = NULL;
 }
 
+// Acrescenta object ao fim: atom=true marca um item, false marca uma sublista.
+// Devolve false se os argumentos forem inválidos ou faltar memória.
 bool gen_list_push_back(GEN_LIST *list, void *object, bool atom) {
 	if(list == NULL || object == NULL)
 		return false;
@@ -91,6 +97,8 @@ bool gen_list_push_back(GEN_LIST *list, void *object, bool atom) {
 	return true;
 }
 
+// Remove o último nó sem destruir seu conteúdo; isAtom informa se era átomo.
+// Devolve o conteúdo ou NULL se a lista estiver vazia ou for inválida.
 void* gen_list_pop_back(GEN_LIST *list, bool *isAtom) {
 	
 	set_atom(isAtom, false);
@@ -119,6 +127,8 @@ void* gen_list_pop_back(GEN_LIST *list, bool *isAtom) {
 	return object;
 }
 
+// Consulta o último conteúdo sem removê-lo; isAtom recebe seu tipo quando pedido.
+// Devolve NULL se a lista estiver vazia ou for inválida.
 void* gen_list_back(GEN_LIST *list, bool *isAtom) {
 	
 	set_atom(isAtom, false);
@@ -131,6 +141,8 @@ void* gen_list_back(GEN_LIST *list, bool *isAtom) {
 	return list->back->object;
 }
 
+// Insere no início e registra se object é átomo ou sublista.
+// Devolve false se os argumentos forem inválidos ou faltar memória.
 bool gen_list_push_front(GEN_LIST *list, void *object, bool atom) {
 	if(list == NULL || object == NULL)
 		return false;
@@ -160,6 +172,8 @@ bool gen_list_push_front(GEN_LIST *list, void *object, bool atom) {
 	return true;
 }
 
+// Remove o primeiro nó sem destruir seu conteúdo; isAtom informa o tipo removido.
+// Devolve NULL se a lista estiver vazia ou for inválida.
 void* gen_list_pop_front(GEN_LIST* list, bool *isAtom) {
 	
 	set_atom(isAtom, false);
@@ -188,6 +202,8 @@ void* gen_list_pop_front(GEN_LIST* list, bool *isAtom) {
 	return object;
 }
 
+// Consulta o primeiro conteúdo sem removê-lo; isAtom recebe seu tipo quando pedido.
+// Devolve NULL se a lista estiver vazia ou for inválida.
 void* gen_list_front(GEN_LIST* list, bool *isAtom) {
 	
 	set_atom(isAtom, false);
@@ -200,7 +216,8 @@ void* gen_list_front(GEN_LIST* list, bool *isAtom) {
 	return list->front->object;
 }
 
-// nao desce nas sublistas, so compara se o tipo (atomo ou sublista) bater
+// Procura apenas neste nível e só compara nós do tipo indicado por atom.
+// Devolve NULL se não encontrar o conteúdo ou se algum argumento for inválido.
 static NODE* find_helper(GEN_LIST *list, void *object, int (*cmp)(void*, void*), bool atom) {
 	if(list == NULL || object == NULL || cmp == NULL) {
 		return NULL;
@@ -220,6 +237,8 @@ static NODE* find_helper(GEN_LIST *list, void *object, int (*cmp)(void*, void*),
 	return NULL;
 }
 
+// Busca no nível atual pelo conteúdo e pelo tipo; isAtom recebe o tipo encontrado.
+// Devolve NULL se não houver correspondência. A lista continua dona dos nós.
 void* gen_list_find(GEN_LIST *list, void *object, bool atom, int (*cmp)(void*, void*), bool *isAtom) {
 	
 	set_atom(isAtom, false);
@@ -238,6 +257,8 @@ void* gen_list_find(GEN_LIST *list, void *object, bool atom, int (*cmp)(void*, v
 	return res->object;
 }
 
+// Desvincula o conteúdo encontrado sem destruí-lo; isAtom informa seu tipo.
+// Devolve NULL se não encontrar. O chamador passa a cuidar do conteúdo removido.
 void* gen_list_erase(GEN_LIST *list, void *object, bool atom, int (*cmp)(void*, void*), bool *isAtom) {
 	
 	set_atom(isAtom, false);
@@ -275,6 +296,8 @@ void* gen_list_erase(GEN_LIST *list, void *object, bool atom, int (*cmp)(void*, 
 	return obj;
 }
 
+// Insere object antes de target no mesmo nível; os flags indicam átomo ou sublista.
+// Devolve false se target não existir ou se faltar memória.
 bool gen_list_insert(GEN_LIST *list, void *object, bool obj_atom, void *target, bool targ_atom, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
 		return false;
@@ -309,6 +332,8 @@ bool gen_list_insert(GEN_LIST *list, void *object, bool obj_atom, void *target, 
 	return true;
 }
 
+// Troca o conteúdo e o tipo do nó alvo; isAtom informa o tipo que foi substituído.
+// Devolve o conteúdo anterior ou NULL se o alvo não for encontrado.
 void* gen_list_set(GEN_LIST *list, void *object, bool obj_atom, void *target, bool targ_atom, int (*cmp)(void*, void*), bool *isAtom) {
 	
 	set_atom(isAtom, false);
@@ -340,6 +365,8 @@ bool gen_list_empty(GEN_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
 
+// Desce recursivamente nas sublistas e chama visitor apenas para os átomos.
+// Devolve false se a lista for inválida ou se visitor pedir para parar.
 bool gen_list_visit(GEN_LIST *list, bool (*visitor)(void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL)
 		return false;

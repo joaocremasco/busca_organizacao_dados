@@ -1,5 +1,4 @@
-/* fluxo todo: le o csv pra colecao base, percorre ela filtrando
-   pra colecao de resultado e exporta o top-k */
+/* Lê o CSV para a coleção base, aplica a consulta e exporta até top-k resultados. */
 #include "collection.h"
 #include "export.h"
 #include "item.h"
@@ -20,6 +19,7 @@ typedef struct {
     bool failed;
 } SearchContext;
 
+// Converte os ticks de clock para milissegundos de CPU; devolve zero se clock falhar.
 static double current_time_ms(void) {
     clock_t now = clock();
 
@@ -29,6 +29,8 @@ static double current_time_ms(void) {
     return (double)now * 1000.0 / CLOCKS_PER_SEC;
 }
 
+// Avalia um ITEM, grava similarity e guarda os aceitos para a segunda passada.
+// Devolve false se a gravação ou o crescimento do vetor falhar.
 static bool process_search_item(ITEM *item, void *context) {
     SearchContext *search = context;
     double similarity;
@@ -39,7 +41,7 @@ static bool process_search_item(ITEM *item, void *context) {
     }
     ++search->matched_count;
 
-    // guarda a nota no item pra poder ordenar por similarity
+    // A nota também precisa estar no ITEM para ORDER|similarity funcionar.
     (void)snprintf(similarity_text, sizeof(similarity_text), "%.17g", similarity);
     if (!item_set(item, "similarity", similarity_text)) {
         search->failed = true;
@@ -75,12 +77,13 @@ static bool process_search_item(ITEM *item, void *context) {
         search->accepted_capacity = new_capacity;
     }
 
-    // guarda os itens aceitos para inserir todos na segunda passada
+    // A inserção em bloco mantém a ordem do percurso e evita cronometrar cada item.
     search->accepted_items[search->accepted_count++] = item;
     return true;
 }
 
-// nao usei strtoul porque ele aceita sinal e espaco, aqui so digito
+// Aceita apenas algarismos e verifica overflow antes de atualizar o valor.
+// Devolve false para texto vazio, caracteres extras ou valor fora de size_t.
 static bool parse_size_argument(const char *text, size_t *value_out) {
     size_t parsed_value = 0;
     size_t digit_index;
@@ -112,7 +115,8 @@ static void print_usage(const char *program_name) {
             program_name);
 }
 
-// qualquer erro seta failed e pula o resto, o cleanup no final roda sempre
+// Executa carga, busca, inserção e exportação; failed desvia as próximas etapas,
+// mas a limpeza compartilhada é feita antes de devolver o código de saída.
 static int run_program(const char *reader_name, const char *input_path,
                        const char *query_path, const char *output_path,
                        COLLECTION_TYPE base_type, COLLECTION_TYPE result_type,
@@ -140,7 +144,7 @@ static int run_program(const char *reader_name, const char *input_path,
         failed = true;
     }
 
-    // essas estruturas dependem de campos que so a query define
+    // Essas estruturas precisam dos campos de organização declarados na consulta.
     if (!failed &&
         (((base_type == COLLECTION_GROUPED_LIST ||
            result_type == COLLECTION_GROUPED_LIST) && !query_has_group(query)) ||
@@ -181,7 +185,7 @@ static int run_program(const char *reader_name, const char *input_path,
     }
 
     if (!failed) {
-        // input_limit 0 le o arquivo inteiro
+        // Limite zero deixa a leitura seguir até o fim do arquivo.
         start_ms = current_time_ms();
         while (input_limit == 0 || input_record_count < input_limit) {
             ITEM *item = NULL;
@@ -263,7 +267,8 @@ static int run_program(const char *reader_name, const char *input_path,
     return exit_status;
 }
 
-// todas as opcoes sao obrigatorias e vem em par (flag valor)
+// Lê os pares de opções, valida os nomes das estruturas e inicia o programa.
+// Devolve 2 para argumentos inválidos; nos demais casos usa o resultado da execução.
 int main(int argc, char **argv) {
     const char *reader_name = NULL;
     const char *input_path = NULL;

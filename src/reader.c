@@ -1,4 +1,4 @@
-// leitor de csv, cada linha vira um ITEM no store
+// Lê registros CSV, converte as colunas em campos de ITEM e registra-os no store.
 #include "../include/reader.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,10 +8,10 @@ struct reader {
   char *path;
   char *reader_name;
   FILE *file;
-  char delimiter; // virgula, ponto e virgula ou tab, detectado no cabecalho
+  char delimiter; // Vírgula, ponto e vírgula ou tabulação detectados no cabeçalho.
   char **columns;
   size_t column_count;
-  char *line; // reaproveitado a cada reader_next
+  char *line; // Reutilizado a cada chamada de reader_next.
   size_t line_capacity;
   char error[256];
 };
@@ -26,7 +26,8 @@ static char *copy_string(const char *text) {
     return copy;
 }
 
-// garante espaco pra mais extra chars e o terminador, devolve false se faltar memoria
+// Garante espaço para length caracteres, extra bytes novos e o terminador.
+// Devolve zero se não conseguir ampliar o buffer.
 static int grow_line(READER *reader, size_t length, size_t extra) {
     size_t capacity = reader->line_capacity;
 
@@ -45,8 +46,8 @@ static int grow_line(READER *reader, size_t length, size_t extra) {
     return 1;
 }
 
-/* le um registro inteiro, \n dentro de aspas nao termina a linha
-   devolve 1 ok, 0 fim do arquivo, -1 erro */
+/* Lê um registro inteiro; uma quebra de linha entre aspas faz parte do campo.
+   Devolve 1 em sucesso, 0 no fim do arquivo e -1 em erro. */
 static int read_line(READER *reader) {
     size_t length = 0;
     int in_quotes = 0;
@@ -72,7 +73,7 @@ static int read_line(READER *reader) {
             if (in_quotes) {
                 int next = fgetc(reader->file);
                 if (next == '"') {
-                    // aspas dobrada ocupa 2 posicoes no buffer
+                    // Aspas duplicadas precisam ser copiadas como chegaram.
                     pair = 1;
                 } else {
                     in_quotes = 0;
@@ -108,7 +109,7 @@ static int read_line(READER *reader) {
     return 1;
 }
 
-// escolhe o delimitador que mais aparece fora das aspas
+// Escolhe o delimitador mais frequente fora de campos entre aspas.
 static char detect_delimiter(const char *line) {
     const char candidates[] = {',', ';', '\t'};
     size_t counts[3] = {0, 0, 0};
@@ -133,9 +134,8 @@ static char detect_delimiter(const char *line) {
     return candidates[best];
 }
 
-/* edita a linha no lugar, os valores apontam pra dentro dela
-   entao so valem ate a proxima leitura
-   devolve 0 se as aspas estiverem mal formadas */
+/* Separa os campos editando line; os valores apontam para dentro dela e só
+   permanecem válidos até a próxima leitura. Devolve zero para aspas inválidas. */
 static int split_record(char *line, char delimiter, char ***values_out, size_t *count_out) {
     size_t capacity = 8, count = 0;
     char **values = malloc(capacity * sizeof(*values));
@@ -179,7 +179,8 @@ static int split_record(char *line, char delimiter, char ***values_out, size_t *
     return 1;
 }
 
-// o primeiro registro e o cabecalho
+// Lê e guarda os nomes das colunas; no leitor games divide o nome unido em dois campos.
+// Devolve zero se o cabeçalho não puder ser lido, separado ou copiado.
 static int read_header(READER *reader) {
     size_t values_count;
 
@@ -195,7 +196,7 @@ static int read_header(READER *reader) {
         return 0;
     }
 
-    // no games.csv duas colunas vem coladas (DiscountDLC count) entao separa
+    // No games.csv, Discount e DLC count chegaram unidos em um único nome.
     if (strcmp(reader->reader_name, "games") == 0) {
         for (size_t i = 0; i < values_count; ++i) {
             if (strcmp(values[i], "DiscountDLC count") == 0) {
@@ -237,6 +238,8 @@ static int read_header(READER *reader) {
     return 1;
 }
 
+// Abre path e prepara o leitor selecionado por reader_name.
+// Devolve NULL se o arquivo, o cabeçalho ou alguma alocação falhar.
 READER *reader_open(const char *path, const char *reader_name) {
     READER *reader;
 
@@ -269,6 +272,7 @@ READER *reader_open(const char *path, const char *reader_name) {
     return reader;
 }
 
+// Fecha o arquivo e libera os buffers e nomes de coluna pertencentes ao leitor.
 void reader_close(READER **reader){
   if(reader == NULL || *reader == NULL)
     return;
@@ -287,6 +291,8 @@ void reader_close(READER **reader){
   *reader = NULL;
 }
 
+// Lê o próximo registro e grava em item a referência do ITEM criado no store.
+// Devolve READER_EOF, READER_ERROR ou READER_OK conforme o resultado da leitura.
 READER_STATUS reader_next(READER *reader, ITEM_STORE *store, ITEM **item) {
     if (reader == NULL || store == NULL || item == NULL)
         return READER_ERROR;

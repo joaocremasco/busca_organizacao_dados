@@ -1,4 +1,4 @@
-// vetor sempre ordenado, busca e insercao usam busca binaria
+// Vetor mantido em ordem; a busca da posição usa busca binária.
 #include <stdlib.h>
 #include "../include/ord_list.h"
 
@@ -14,6 +14,8 @@ struct ord_list_ {
 	void *cmp_context;
 };
 
+// Cria o vetor ordenado com cmp, que deve devolver negativo, zero ou positivo.
+// Devolve NULL se cmp for nulo ou alguma alocação falhar.
 ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*)) {
 	if(cmp == NULL)
 		return NULL;
@@ -39,6 +41,8 @@ ORD_LIST* ord_list_init(void (*destroy)(void*), int (*cmp)(void*, void*)) {
 	return sq;
 }
 
+// Variante que também passa context ao comparador; destroy é opcional.
+// Devolve NULL se o comparador for nulo ou alguma alocação falhar.
 ORD_LIST* ord_list_init_with_context(void (*destroy)(void*),
                                      ORD_LIST_COMPARE cmp, void *context) {
 	if(cmp == NULL)
@@ -63,13 +67,15 @@ ORD_LIST* ord_list_init_with_context(void (*destroy)(void*),
 	return sq;
 }
 
-// usa o cmp com contexto se tiver, senao o simples
+// Usa o comparador com contexto quando configurado; caso contrário, usa cmp.
 static int compare_objects(ORD_LIST *sq, void *left, void *right) {
 	if(sq->cmp_with_context != NULL)
 		return sq->cmp_with_context(left, right, sq->cmp_context);
 	return sq->cmp(left, right);
 }
 
+// Libera o vetor e a lista; se destroy foi informado, chama-o para cada objeto.
+// No projeto, os ITEMs pertencem ao ITEM_STORE e não são liberados pela coleção.
 void ord_list_destroy(ORD_LIST **sq) {
 	if(sq == NULL || *sq == NULL)
 		return;
@@ -88,6 +94,8 @@ void ord_list_destroy(ORD_LIST **sq) {
 	*sq = NULL;
 }
 
+// Ajusta a capacidade; ao encolher, descarta os objetos além do novo limite.
+// Devolve false para capacidade inválida ou se realloc falhar.
 bool ord_list_resize(ORD_LIST *sq, int capacity) {
 	if(sq == NULL || capacity <= 0)
 		return false;
@@ -113,6 +121,8 @@ bool ord_list_resize(ORD_LIST *sq, int capacity) {
 	return true;
 }
 
+// Procura em [low, high) a primeira posição cujo objeto não vem antes de object.
+// Devolve -1 para argumentos inválidos.
 int ord_list_lower_bound(ORD_LIST *sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return -1;
@@ -123,7 +133,7 @@ int ord_list_lower_bound(ORD_LIST *sq, void *object) {
 
 		int mid = low + (high - low)/2;
 		
-		// res < 0 quer dizer que o elemento do meio vem antes do alvo
+		// O limite superior fica no meio quando ele já pode ser a primeira posição válida.
 		
 		int res = compare_objects(sq, sq->array[mid], object);
 
@@ -138,6 +148,8 @@ int ord_list_lower_bound(ORD_LIST *sq, void *object) {
 	return low;
 }
 
+// Procura em [low, high) a primeira posição depois de todos os objetos iguais.
+// Devolve -1 para argumentos inválidos.
 int ord_list_upper_bound(ORD_LIST *sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return -1;
@@ -148,7 +160,7 @@ int ord_list_upper_bound(ORD_LIST *sq, void *object) {
 
 		int mid = low + (high - low)/2;
 		
-		// res > 0 quer dizer que o do meio ja passou do alvo
+		// Igualdade avança low para manter a inserção após os valores repetidos.
 		
 		int res = compare_objects(sq, sq->array[mid], object);
 
@@ -163,6 +175,8 @@ int ord_list_upper_bound(ORD_LIST *sq, void *object) {
 	return low;
 }
 
+// Usa lower_bound e confirma a igualdade com o comparador da lista.
+// Devolve o índice encontrado ou -1 se não houver correspondência.
 int ord_list_find(ORD_LIST *sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return -1;
@@ -178,6 +192,8 @@ int ord_list_find(ORD_LIST *sq, void *object) {
 	return -1;
 }
 
+// Insere na posição devolvida por upper_bound; os itens seguintes são deslocados
+// para abrir espaço, preservando a ordem de chegada entre chaves iguais.
 bool ord_list_insert(ORD_LIST* sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return false;
@@ -187,7 +203,7 @@ bool ord_list_insert(ORD_LIST* sq, void *object) {
 			return false;
 	}
 	
-	// upper_bound deixa os iguais na ordem em que entraram
+	// upper_bound mantém a ordem de chegada entre objetos com a mesma chave.
 	int idx = ord_list_upper_bound(sq, object);
 
 	int seq_size = sq->size;
@@ -203,6 +219,8 @@ bool ord_list_insert(ORD_LIST* sq, void *object) {
 	return true;
 }
 
+// Remove a primeira chave igual a object e devolve o ponteiro sem destruí-lo.
+// Devolve NULL se não encontrar o objeto.
 void* ord_list_erase(ORD_LIST* sq, void *object) {
 	if(sq == NULL || object == NULL)
 		return NULL;
@@ -225,6 +243,7 @@ void* ord_list_erase(ORD_LIST* sq, void *object) {
 	return obj;
 }
 
+// Remove pelo índice e devolve o ponteiro sem chamar destroy; NULL indica índice inválido.
 void* ord_list_erase_at(ORD_LIST *sq, int idx) {
 	if(sq == NULL || idx < 0 || idx >= sq->size)
 		return NULL;
@@ -250,6 +269,7 @@ bool ord_list_empty(ORD_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
 
+// Percorre os objetos na ordem mantida pelo vetor; false também indica parada do visitor.
 bool ord_list_visit(ORD_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
 	if(sq == NULL || visitor == NULL)
 		return false;

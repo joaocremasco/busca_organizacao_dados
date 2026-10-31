@@ -1,4 +1,4 @@
-// vetor que cresce sozinho no push e no insert
+// Vetor com capacidade ajustada conforme os elementos são acrescentados.
 #include <stdlib.h>
 #include "../include/seq_list.h"
 
@@ -11,6 +11,8 @@ struct seq_list_ {
 	void (*destroy)(void*);
 };
 
+// Cria um vetor vazio com capacidade inicial; destroy é opcional.
+// Devolve NULL se alguma alocação falhar.
 SEQ_LIST* seq_list_init(void (*destroy)(void*)) {
 
 	SEQ_LIST* sq = malloc(sizeof(*sq));
@@ -48,6 +50,8 @@ void seq_list_destroy(SEQ_LIST **sq) {
 	*sq = NULL;
 }
 
+// Ajusta a capacidade; ao encolher, descarta os objetos que ficam fora do limite.
+// Devolve false para capacidade inválida ou falha de alocação.
 bool seq_list_resize(SEQ_LIST *sq, int capacity) {
 	if(sq == NULL || capacity <= 0)
 		return false;
@@ -87,6 +91,8 @@ bool seq_list_push_back(SEQ_LIST* sq, void *object) {
 	return true;
 }
 
+// Abre espaço em idx deslocando os elementos seguintes para a direita.
+// Devolve false se o índice for inválido ou se o vetor não puder crescer.
 bool seq_list_insert(SEQ_LIST* sq, void *object, int idx) {
 	if(sq == NULL || object == NULL || idx < 0 || idx > sq->size)
 		return false;
@@ -109,6 +115,8 @@ bool seq_list_insert(SEQ_LIST* sq, void *object, int idx) {
 	return true;
 }
 
+// Remove pelo índice, compacta o trecho seguinte e devolve o objeto sem liberá-lo.
+// Devolve NULL quando o índice não existe.
 void* seq_list_erase(SEQ_LIST* sq, int idx) {
 	if(sq == NULL || idx < 0 || idx >= sq->size)
 		return NULL;
@@ -135,6 +143,8 @@ void* seq_list_pop_back(SEQ_LIST* sq) {
 	return object;
 }
 
+// Usa cmp para procurar uma correspondência; cmp deve devolver zero quando iguais.
+// Devolve o índice encontrado ou -1 se não houver correspondência.
 int seq_list_find(SEQ_LIST *sq, void *object, int (*cmp)(void*, void*)) {
 	if(sq == NULL || object == NULL || cmp == NULL)
 		return -1;
@@ -156,6 +166,8 @@ void* seq_list_get(SEQ_LIST *sq, int idx) {
 	return sq->array[idx];
 }
 
+// Substitui o conteúdo do índice e devolve o ponteiro anterior sem liberá-lo.
+// Devolve NULL para índice inválido ou objeto nulo.
 void* seq_list_set(SEQ_LIST *sq, void *object, int idx) {
 	if(sq == NULL || object == NULL ||  idx < 0 || idx >= sq->size)
 		return NULL;
@@ -175,6 +187,7 @@ bool seq_list_empty(SEQ_LIST *sq) {
 	return sq == NULL ? true : sq->size == 0;
 }
 
+// Visita na ordem do vetor; devolve false se o visitor interromper o percurso.
 bool seq_list_visit(SEQ_LIST *sq, bool (*visitor)(void *object, void *context), void *context) {
 	if(sq == NULL || visitor == NULL)
 		return false;

@@ -1,4 +1,4 @@
-// matriz esparsa, cada no fica ligado na sua linha e na sua coluna
+// Matriz esparsa: cada nó fica ligado à sua linha e à sua coluna.
 #include <stdlib.h>
 #include "../include/crossed_list.h"
 
@@ -23,6 +23,8 @@ struct crossed_list_ {
 	void (*destroy)(void*);
 };
 
+// Cria uma matriz vazia; destroy, quando informado, recebe os objetos removidos.
+// Devolve NULL se alguma alocação falhar.
 CROSSED_LIST* crossed_list_init(void (*destroy)(void*)) {
 
 	CROSSED_LIST *list = malloc(sizeof(*list));
@@ -40,7 +42,8 @@ CROSSED_LIST* crossed_list_init(void (*destroy)(void*)) {
 	return list;
 }
 
-// ultimo no da linha i com coluna <= j, NULL se nao tiver
+// i e j indicam a linha e a coluna procuradas; devolve o último nó até j,
+// ou NULL se a linha não tiver um nó nessa faixa.
 static NODE* crossed_list_iterate_right(CROSSED_LIST *list, int i, int j) {
 	NODE *prev = NULL;
 	NODE *idx = list->rows[i];
@@ -53,7 +56,8 @@ static NODE* crossed_list_iterate_right(CROSSED_LIST *list, int i, int j) {
 	return prev;
 }
 
-// ultimo no da coluna j com linha <= i, NULL se nao tiver
+// i e j indicam a linha e a coluna procuradas; devolve o último nó até i,
+// ou NULL se a coluna não tiver um nó nessa faixa.
 static NODE* crossed_list_iterate_down(CROSSED_LIST *list, int i, int j) {
 	
 	NODE *prev = NULL;
@@ -67,7 +71,8 @@ static NODE* crossed_list_iterate_down(CROSSED_LIST *list, int i, int j) {
 	return prev;
 }
 
-// so anda pela linha, a lista da linha e ordenada por coluna
+// Procura a coordenada (i, j) na linha i, que está ordenada por coluna.
+// Devolve NULL para índices inválidos ou quando a célula não existe.
 static NODE* crossed_list_find_node(CROSSED_LIST *list, int i, int j) {
 	if(list == NULL || i < 0 || i >= list->row_cap || j < 0 || j >= list->col_cap)
 		return NULL;
@@ -84,7 +89,8 @@ static NODE* crossed_list_find_node(CROSSED_LIST *list, int i, int j) {
 	return NULL;
 }
 
-// se o no for a cabeca da linha ou da coluna atualiza o vetor tambem
+// Atualiza os dois encadeamentos e os vetores de início quando o nó removido
+// ocupa uma das pontas; assim a célula deixa de aparecer nos dois percursos.
 static void crossed_list_unlink(CROSSED_LIST *list, NODE *node) {
 	if(node->up != NULL) {
 		node->up->down = node->down;
@@ -111,7 +117,8 @@ static void crossed_list_unlink(CROSSED_LIST *list, NODE *node) {
 	list->size--;
 }
 
-// apaga o no e tudo que vem depois dele na linha (ou coluna)
+// Remove a partir de node seguindo a linha ou a coluna indicada por isRow.
+// O callback destroy recebe cada objeto removido, se tiver sido configurado.
 static bool crossed_list_erase_tail(CROSSED_LIST *list, NODE *node, bool isRow) {
 	if(list == NULL)
 		return false;
@@ -135,6 +142,8 @@ static bool crossed_list_erase_tail(CROSSED_LIST *list, NODE *node, bool isRow) 
 	return true;
 }
 
+// Destrói os nós e os vetores da matriz; os objetos só passam ao callback
+// configurado na criação. No projeto, os ITEMs pertencem ao ITEM_STORE.
 void crossed_list_destroy(CROSSED_LIST **list) {
 	if(list == NULL || *list == NULL)
 		return;
@@ -151,6 +160,8 @@ void crossed_list_destroy(CROSSED_LIST **list) {
 	*list = NULL;
 }
 
+// Redimensiona linhas (isRow) ou colunas e remove células que saem da faixa.
+// Devolve false para capacidade inválida ou falha de alocação.
 bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow) {
 	if(list == NULL || capacity < 0)
 		return false;
@@ -221,6 +232,8 @@ bool crossed_list_resize(CROSSED_LIST *list, int capacity, bool isRow) {
 }
 
 
+// i e j são os índices da linha e da coluna; um nó liga o mesmo objeto aos
+// dois percursos, sem copiá-lo. Devolve false se a posição não servir.
 bool crossed_list_insert(CROSSED_LIST *list, int i, int j, void *object) {
 	if(list == NULL || object == NULL || i < 0 || i >= list->row_cap || j < 0 || j >= list->col_cap)
 		return false;
@@ -274,6 +287,7 @@ bool crossed_list_insert(CROSSED_LIST *list, int i, int j, void *object) {
 	return true;
 }
 
+// Devolve o objeto na célula (i, j), ou NULL se a coordenada não existir.
 void* crossed_list_get(CROSSED_LIST *list, int i, int j) {
 	NODE *node = crossed_list_find_node(list, i, j);
 
@@ -283,6 +297,8 @@ void* crossed_list_get(CROSSED_LIST *list, int i, int j) {
 	return node->object;
 }
 
+// Percorre as linhas usando cmp; i e j, quando não nulos, recebem a posição.
+// Devolve o objeto encontrado ou NULL se os argumentos forem inválidos ou não houver correspondência.
 void* crossed_list_find(CROSSED_LIST *list, void *target, int (*cmp)(void*, void*), int *i, int *j) {
 	if(list == NULL || target == NULL || cmp == NULL)
 		return NULL;
@@ -310,6 +326,8 @@ void* crossed_list_find(CROSSED_LIST *list, void *target, int (*cmp)(void*, void
 	return NULL;
 }
 
+// Desliga a célula (i, j) dos dois eixos e devolve seu objeto sem destruí-lo.
+// Devolve NULL se a posição estiver vazia ou for inválida.
 void* crossed_list_remove(CROSSED_LIST *list, int i, int j) {
 	
 	NODE *node = crossed_list_find_node(list, i, j);
@@ -325,6 +343,8 @@ void* crossed_list_remove(CROSSED_LIST *list, int i, int j) {
 	return object;
 }
 
+// Remove todas as células da linha ou coluna index, conforme isRow.
+// Devolve false para índices inválidos; os objetos passam ao callback configurado.
 bool crossed_list_remove_line(CROSSED_LIST *list, int index, bool isRow) {
 	if(list == NULL || index < 0)
 		return false;
@@ -358,6 +378,8 @@ bool crossed_list_empty(CROSSED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
 
+// Visita cada célula uma vez pelas linhas; false indica argumento inválido
+// ou que o visitor pediu para interromper o percurso.
 bool crossed_list_visit(CROSSED_LIST *list, bool (*visitor)(int i, int j, void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL)
 		return false;
@@ -372,6 +394,8 @@ bool crossed_list_visit(CROSSED_LIST *list, bool (*visitor)(int i, int j, void *
 	return true;
 }
 
+// Percorre uma linha (isRow) ou coluna no índice indicado e informa i, j e objeto.
+// Devolve false para índice inválido ou quando o visitor interrompe o percurso.
 bool crossed_list_visit_line(CROSSED_LIST *list, int index, bool isRow, bool (*visitor)(int i, int j, void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL || index < 0)
 		return false;

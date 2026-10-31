@@ -1,4 +1,4 @@
-// fila ligada, entra pelo back e sai pelo front
+// Fila encadeada: os elementos entram por back e saem por front.
 #include <stdlib.h>
 #include "../include/queue.h"
 
@@ -16,6 +16,8 @@ struct queue_ {
 	void (*destroy)(void*);
 };
 
+// Cria uma fila vazia; destroy é opcional e recebe os objetos na destruição.
+// Devolve NULL se a alocação falhar.
 QUEUE* queue_init(void (*destroy)(void*)) {
 
 	QUEUE *q = malloc(sizeof(*q));
@@ -117,6 +119,7 @@ bool queue_empty(QUEUE *q) {
 	return q == NULL ? true : q->size == 0;
 }
 
+// Percorre da frente para trás; false indica argumento inválido ou parada do visitor.
 bool queue_visit(QUEUE *q, bool (*visitor)(void *object, void *context), void *context) {
 	if(q == NULL || visitor == NULL)
 		return false;

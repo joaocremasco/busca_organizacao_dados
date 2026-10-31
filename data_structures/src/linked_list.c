@@ -1,4 +1,4 @@
-// lista duplamente encadeada com ponteiro pro primeiro e pro ultimo
+// Lista duplamente encadeada com ponteiros para o primeiro e o último nó.
 #include <stdlib.h>
 #include "../include/linked_list.h"
 
@@ -162,6 +162,8 @@ void* linked_list_front(LINKED_LIST* list) {
 	return list->size == 0 ? NULL : list->front->object;
 }
 
+// Procura o nó cujo objeto compara igual; NULL indica argumentos inválidos
+// ou ausência de correspondência.
 static NODE* find_helper(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
@@ -179,6 +181,7 @@ static NODE* find_helper(LINKED_LIST *list, void *object, int (*cmp)(void*, void
 	return NULL;
 }
 
+// Devolve o primeiro objeto que cmp considera igual ao alvo, ou NULL se não houver.
 void* linked_list_find(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
@@ -191,6 +194,8 @@ void* linked_list_find(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)
 	return res->object;
 }
 
+// Desliga o primeiro objeto igual ao alvo e devolve seu ponteiro sem liberá-lo.
+// Devolve NULL se não houver correspondência; os itens do projeto pertencem ao ITEM_STORE.
 void* linked_list_erase(LINKED_LIST *list, void *object, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || cmp == NULL)
 		return NULL;
@@ -222,6 +227,8 @@ void* linked_list_erase(LINKED_LIST *list, void *object, int (*cmp)(void*, void*
 	return obj;
 }
 
+// Troca o objeto do nó que corresponde a target e devolve a referência anterior.
+// Devolve NULL se o alvo não existir.
 void* linked_list_set(LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
 		return NULL;
@@ -239,6 +246,8 @@ void* linked_list_set(LINKED_LIST *list, void *object, void *target, int (*cmp)(
 	return old;
 }
 
+// Insere object antes do primeiro target igual segundo cmp.
+// Devolve false se target não existir ou se faltar memória.
 bool linked_list_insert(LINKED_LIST *list, void *object, void *target, int (*cmp)(void*, void*)) {
 	if(list == NULL || object == NULL || target == NULL || cmp == NULL)
 		return false;
@@ -281,6 +290,7 @@ bool linked_list_empty(LINKED_LIST *list) {
 	return list == NULL ? true : list->size == 0;
 }
 
+// Percorre do primeiro ao último nó e para quando visitor devolve false.
 bool linked_list_visit(LINKED_LIST *list, bool (*visitor)(void *object, void *context), void *context) {
 	if(list == NULL || visitor == NULL)
 		return false;

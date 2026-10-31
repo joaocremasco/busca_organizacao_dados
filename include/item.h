@@ -7,17 +7,17 @@
 typedef struct item_ ITEM;
 typedef struct item_store ITEM_STORE;
 
-// o armazenamento e dono dos itens e as colecoes guardam referencias
+// O ITEM_STORE é dono dos itens; as coleções guardam apenas referências.
 ITEM_STORE *item_store_create(void);
-// libera todos os itens registrados
+// Libera todos os itens e seus campos registrados no armazenamento.
 void item_store_destroy(ITEM_STORE **store);
-// a capacidade inicial cresce quando faltam campos
+// field_capacity define a capacidade inicial do vetor de campos.
 ITEM *item_create(ITEM_STORE *store, size_t field_capacity) ;
-// copia o nome e o valor para o item
+// Copia name e raw_value para o ITEM.
 bool item_set(ITEM *item, const char *name, const char *raw_value);
-// devolve nulo quando o campo nao existe
+// Devolve NULL se o campo não existir.
 const char *item_get(const ITEM *item, const char *name);
-// falha se o campo nao existir ou nao for numero
+// Devolve false se o campo não existir ou não representar um número completo.
 bool item_get_number(const ITEM *item, const char *name, double *value);
 size_t item_field_count(const ITEM *item);
 const char *item_field_name(const ITEM *item, size_t index);

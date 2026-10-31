@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// zero exporta tudo e a contagem pode ser nula
+// top_k igual a zero exporta tudo; written pode ser NULL se a contagem não interessar.
 bool export_write(const char *path, const READER *reader,
                   const COLLECTION *results, size_t top_k, size_t *written);
 

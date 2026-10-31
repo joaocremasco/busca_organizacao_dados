@@ -1,3 +1,4 @@
+// Exporta os itens da coleção como registros CSV usando as colunas do leitor.
 #include "export.h"
 
 #include <stdio.h>
@@ -10,7 +11,7 @@ typedef struct {
     bool failed;
 } WriteContext;
 
-// so poe aspas se precisar, aspas dentro do valor viram aspas duplas
+// Aplica o escape de CSV apenas quando o valor contém delimitador, aspas ou quebra de linha.
 static bool write_csv_field(FILE *file, const char *value, char delimiter) {
     const char *character;
     bool needs_quotes = false;
@@ -40,7 +41,8 @@ static bool write_csv_field(FILE *file, const char *value, char delimiter) {
     return !needs_quotes || fputc('"', file) != EOF;
 }
 
-// item NULL escreve o cabecalho
+// Com item NULL escreve o cabeçalho; caso contrário, busca cada coluna no ITEM.
+// Devolve false se uma escrita falhar.
 static bool write_csv_record(FILE *file, const READER *reader, const ITEM *item) {
     size_t column_index;
     char delimiter = reader_delimiter(reader);
@@ -59,7 +61,8 @@ static bool write_csv_record(FILE *file, const READER *reader, const ITEM *item)
     return fputc('\n', file) != EOF;
 }
 
-// record_limit 0 quer dizer sem limite, devolve false pra parar a visita
+// Para a visita ao atingir record_limit; zero significa sem limite.
+// Devolve false também se a escrita falhar.
 static bool write_item(ITEM *item, void *context) {
     WriteContext *write_context = context;
 
@@ -76,6 +79,8 @@ static bool write_item(ITEM *item, void *context) {
            write_context->records_written < write_context->record_limit;
 }
 
+// Grava cabeçalho e até top_k itens em path; zero exporta todos e written pode ser NULL.
+// Devolve false para argumentos inválidos ou falha de abertura, escrita ou fechamento.
 bool export_write(const char *path, const READER *reader, const COLLECTION *results,
                   size_t top_k, size_t *written) {
     FILE *output_file;
