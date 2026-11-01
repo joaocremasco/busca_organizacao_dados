@@ -93,10 +93,10 @@ As consultas de exemplo ficam em [`queries/`](queries/).
 
 ## Relatórios
 
-- [Relatório do projeto e experimental em PDF](docs/relatorio_latex_projeto.pdf)
+- [Relatório final do projeto em PDF](docs/relatorio.pdf)
 - [Relatório do projeto em Markdown](docs/relatorio_projeto.md)
 - [Relatório experimental em Markdown](docs/relatorio_experimental.md)
-- [Fontes do relatório em LaTeX](docs/relatorio.tex)
+- [Fonte do relatório final em LaTeX](docs/relatorio.tex)
 - [Descrição do projeto](docs/descricao-projeto1.pdf)
 
 ## Organização do repositório

@@ -10,7 +10,7 @@
 /docs/relatorio.aux
 /docs/relatorio.log
 /docs/relatorio.out
-/docs/relatorio.pdf
+/docs/build/
 
 # Local datasets
 /games.csv
