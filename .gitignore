@@ -3,6 +3,7 @@
 *.d
 /trabalho
 /tests/test_tads
+/docs/build/
 /relatorio.aux
 /relatorio.log
 /relatorio.out
@@ -10,8 +11,7 @@
 /docs/relatorio.aux
 /docs/relatorio.log
 /docs/relatorio.out
-/docs/build/
 
 # Local datasets
-/games.csv
-/games.json
+games.csv
+games.json
