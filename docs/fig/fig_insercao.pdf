@@ -12,7 +12,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 5 0 obj
-<< /Length 1604 >>
+<< /Length 1828 >>
 stream
 0.82 G 0.4 w
 48 50.00 m 493 50.00 l S
@@ -29,42 +29,48 @@ BT /F1 7 Tf 25.00 120.25 Td (15) Tj ET
 0.82 G 0.4 w
 48 146.33 m 493 146.33 l S
 BT /F1 7 Tf 25.00 144.33 Td (20) Tj ET
-0.75 g
+0.82 G 0.4 w
+48 170.41 m 493 170.41 l S
+BT /F1 7 Tf 25.00 168.41 Td (25) Tj ET
+0.82 G 0.4 w
+48 194.49 m 493 194.49 l S
+BT /F1 7 Tf 25.00 192.49 Td (30) Tj ET
+0.00 0.28 0.68 rg
 66 50 38 0.50 re f
 0 G 0.5 w
 66 50 38 0.50 re S
 BT /F1 7 Tf 64.00 54.50 Td (0.10) Tj ET
 BT /F1 6 Tf 63.00 37.00 Td (array_list) Tj ET
 BT /F1 6 Tf 67.00 27.00 Td (\(93\)) Tj ET
-0.38 g
+0.82 0.25 0.05 rg
 138 50 38 122.88 re f
 0 G 0.5 w
 138 50 38 122.88 re S
 BT /F1 7 Tf 136.00 176.88 Td (25.51) Tj ET
 BT /F1 6 Tf 135.00 37.00 Td (ordered_list) Tj ET
 BT /F1 6 Tf 139.00 27.00 Td (\(5.501\)) Tj ET
-0.12 g
+0.00 0.43 0.28 rg
 210 50 38 5.19 re f
 0 G 0.5 w
 210 50 38 5.19 re S
 BT /F1 7 Tf 208.00 59.19 Td (1.08) Tj ET
 BT /F1 6 Tf 207.00 37.00 Td (crossed_list) Tj ET
 BT /F1 6 Tf 211.00 27.00 Td (\(12.919\)) Tj ET
-0.55 g
+0.43 0.20 0.60 rg
 282 50 38 19.05 re f
 0 G 0.5 w
 282 50 38 19.05 re S
 BT /F1 7 Tf 280.00 73.05 Td (3.96) Tj ET
 BT /F1 6 Tf 279.00 37.00 Td (generalized_list) Tj ET
 BT /F1 6 Tf 283.00 27.00 Td (\(6.145\)) Tj ET
-0.12 g
+0.00 0.43 0.28 rg
 354 50 38 13.89 re f
 0 G 0.5 w
 354 50 38 13.89 re S
 BT /F1 7 Tf 352.00 67.89 Td (2.88) Tj ET
 BT /F1 6 Tf 351.00 37.00 Td (crossed_list) Tj ET
 BT /F1 6 Tf 355.00 27.00 Td (\(43\)) Tj ET
-0.38 g
+0.82 0.25 0.05 rg
 426 50 38 16.43 re f
 0 G 0.5 w
 426 50 38 16.43 re S
@@ -85,5 +91,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1966
+2190
 %%EOF

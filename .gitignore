@@ -2,6 +2,15 @@
 *.o
 *.d
 /trabalho
+/tests/test_tads
+/relatorio.aux
+/relatorio.log
+/relatorio.out
+/relatorio.pdf
+/docs/relatorio.aux
+/docs/relatorio.log
+/docs/relatorio.out
+/docs/relatorio.pdf
 
 # Local datasets
 /games.csv

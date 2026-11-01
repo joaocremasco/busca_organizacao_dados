@@ -103,15 +103,23 @@ def make_insertions():
         values.append(mean*1000/matched)
     c=[]; left,bottom,width,height=48,50,445,145
     top=max(20,max(values)*1.18)
-    for tick in (0,5,10,15,20):
+    tick_step = 5
+    last_tick = int(top // tick_step) * tick_step
+    for tick in range(0, last_tick + tick_step, tick_step):
         y=bottom+tick/top*height
         c.append('0.82 G 0.4 w\n'+f'{left} {y:.2f} m {left+width} {y:.2f} l S\n')
         c.append(pdf_text(25,y-2,str(tick),7))
     barw=38; gap=34
     for i,(label,val) in enumerate(zip(labels,values)):
         x=left+18+i*(barw+gap); h=val/top*height
-        gray=('0.75','0.38','0.12','0.55','0.12','0.38')[i]
-        c.append(gray+' g\n'+f'{x} {bottom} {barw} {h:.2f} re f\n0 G 0.5 w\n'+f'{x} {bottom} {barw} {h:.2f} re S\n')
+        colors={
+            'array_list':'0.00 0.28 0.68',
+            'ordered_list':'0.82 0.25 0.05',
+            'crossed_list':'0.00 0.43 0.28',
+            'generalized_list':'0.43 0.20 0.60',
+        }
+        color=colors[label[0]]
+        c.append(color+' rg\n'+f'{x} {bottom} {barw} {h:.2f} re f\n0 G 0.5 w\n'+f'{x} {bottom} {barw} {h:.2f} re S\n')
         c.append(pdf_text(x-2,bottom+h+4,f'{val:.2f}',7))
         c.append(pdf_text(x-3,bottom-13,label[0],6))
         c.append(pdf_text(x+1,bottom-23,f'({label[1]:,})'.replace(',','.'),6))
