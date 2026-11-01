@@ -1,11 +1,11 @@
 # Relatório Experimental — Complexidade e Desempenho
 
-**Projeto:** Busca e Organização de Dados — SCC0202  
-**Compilador:** GCC, flags `-std=c99 -Wall -Wextra -pedantic`  
-**Máquina/SO:** Intel Core i5-10210U (4 núcleos/8 threads), 15 GiB RAM, Linux x86_64 (kernel 7.0.0-38-generic)  
+**Projeto:** Busca e Organização de Dados — SCC0202
+**Compilador:** GCC, flags `-std=c99 -Wall -Wextra -pedantic`
+**Máquina/SO:** Intel Core i5-10210U (4 núcleos/8 threads), 15 GiB RAM, Linux x86_64; máquina não isolada; frequência observada em 57% do máximo nominal (kernel 7.0.0-42-generic)
 **Datasets:** `asteroid_dataset_20251019.csv` (89.227 registros) e `games.csv` (125.855 registros)
 
-**Data das medições:** 29/10/2026
+**Data das medições:** 01/11/2026
 
 Cada configuração teve uma execução de aquecimento descartada e três execuções medidas. As 36 medições estão em [benchmark_raw.csv](../resultados/benchmark_raw.csv). As tabelas mostram média e desvio padrão amostral (`s`), em milissegundos.
 
@@ -13,7 +13,7 @@ Cada configuração teve uma execução de aquecimento descartada e três execu�
 
 O executável foi recompilado com `make -B`, usando as flags do Makefile, sem erros ou avisos. Antes de cada configuração foi feita uma execução descartada para aquecer o processo e o acesso aos arquivos. A medição usa `clock()` da biblioteca padrão C. Portanto, os valores representam tempo de CPU consumido pelo processo, em milissegundos, e não tempo decorrido de relógio. Esperas por leitura e escrita em disco não são contabilizadas como tempo de CPU; os resultados não representam a latência total percebida.
 
-O ambiente foi um Intel Core i5-10210U, 4 núcleos e 8 threads, Linux x86_64 com kernel 7.0.0-38-generic e 15 GiB de RAM. A máquina não estava isolada. Não foi registrado um snapshot de carga do sistema imediatamente antes desta série, então não dá para separar a variação do programa da atividade concorrente.
+O ambiente foi um Intel Core i5-10210U, 4 núcleos e 8 threads, Linux x86_64 com kernel 7.0.0-42-generic e 15 GiB de RAM. A máquina não estava isolada. No momento da coleta, o load average era 6,64, 6,26 e 6,00; a frequência reportada estava em 57% do máximo nominal. Essa observação pontual não permite separar a variação do programa da atividade concorrente ao longo de toda a série.
 
 O programa mede carga, busca, inserção dos resultados e escrita. Na busca, `collection_visit` avalia os critérios, grava `similarity` e guarda ponteiros dos aceitos em um vetor. A inserção dos resultados acontece depois, numa segunda passada; um único par de chamadas a `clock()` envolve o laço inteiro de inserções. Assim, `SEARCH_MS` não inclui a inserção dos resultados, e `RESULT_INSERT_MS` não soma uma medição de relógio por item. A coluna total é a soma das médias arredondadas exibidas para as quatro fases; o desvio padrão do total é calculado sobre a soma das fases em cada repetição.
 
@@ -50,26 +50,26 @@ No dataset de asteroides, o limite de 50.000 interrompe a carga antes do fim da 
 
 | N carregado | k | Carga (ms) | Busca (ms) | Inserção res. (ms) | Saída (ms) | Total (ms) | Encontrados / exportados |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1.000 | 10 | 12,150 ± 0,148 | 3,075 ± 0,816 | 0,028 ± 0,001 | 0,376 ± 0,071 | 15,629 ± 0,785 | 649 / 10 |
-| 5.000 | 50 | 28,606 ± 0,854 | 6,070 ± 0,123 | 0,053 ± 0,001 | 0,420 ± 0,003 | 35,149 ± 0,965 | 3.195 / 50 |
-| 10.000 | 100 | 56,270 ± 3,523 | 11,929 ± 0,552 | 0,112 ± 0,002 | 0,661 ± 0,049 | 68,972 ± 3,846 | 6.323 / 100 |
-| 25.000 | 500 | 155,548 ± 5,775 | 30,834 ± 2,016 | 0,306 ± 0,006 | 3,269 ± 0,833 | 189,957 ± 6,804 | 15.249 / 500 |
-| 50.000 | 1.000 | 332,364 ± 49,712 | 69,944 ± 7,257 | 0,590 ± 0,057 | 6,951 ± 0,442 | 409,849 ± 57,150 | 24.012 / 1.000 |
-| 89.227 (toda) | todos | 434,041 ± 12,547 | 103,079 ± 8,536 | 0,839 ± 0,129 | 191,707 ± 18,858 | 729,666 ± 12,017 | 39.380 / 39.380 |
+| 1.000 | 10 | 9,915 ± 1,144 | 2,488 ± 0,330 | 0,024 ± 0,001 | 0,337 ± 0,094 | 12,764 ± 1,102 | 649 / 10 |
+| 5.000 | 50 | 45,734 ± 1,525 | 10,906 ± 1,447 | 0,093 ± 0,024 | 0,696 ± 0,028 | 57,429 ± 1,598 | 3.195 / 50 |
+| 10.000 | 100 | 93,834 ± 2,991 | 21,003 ± 2,083 | 0,225 ± 0,093 | 1,128 ± 0,108 | 116,190 ± 3,057 | 6.323 / 100 |
+| 25.000 | 500 | 259,943 ± 10,395 | 58,729 ± 3,694 | 0,507 ± 0,090 | 4,625 ± 0,597 | 323,805 ± 9,731 | 15.249 / 500 |
+| 50.000 | 1.000 | 510,761 ± 8,330 | 101,930 ± 9,109 | 0,746 ± 0,247 | 8,911 ± 1,121 | 622,348 ± 13,754 | 24.012 / 1.000 |
+| 89.227 (toda) | todos | 970,935 ± 13,388 | 187,741 ± 15,744 | 1,100 ± 0,166 | 332,816 ± 18,368 | 1.492,593 ± 36,418 | 39.380 / 39.380 |
 
 ### Jogos (`linked_list` → `array_list`)
 
 | N carregado | k | Carga (ms) | Busca (ms) | Inserção res. (ms) | Saída (ms) | Total (ms) | Encontrados / exportados |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1.000 | 10 | 62,656 ± 3,973 | 2,507 ± 1,323 | 0,019 ± 0,003 | 0,603 ± 0,052 | 65,785 ± 5,257 | 1.000 / 10 |
-| 5.000 | 50 | 245,154 ± 2,946 | 7,924 ± 0,222 | 0,080 ± 0,009 | 2,010 ± 0,192 | 255,168 ± 3,007 | 4.998 / 50 |
-| 10.000 | 100 | 490,325 ± 35,630 | 19,631 ± 0,230 | 0,180 ± 0,006 | 4,009 ± 0,138 | 514,145 ± 35,589 | 9.996 / 100 |
-| 25.000 | 500 | 1.201,504 ± 59,925 | 43,898 ± 0,777 | 0,524 ± 0,020 | 19,399 ± 1,924 | 1.265,325 ± 59,430 | 24.989 / 500 |
-| 50.000 | 1.000 | 2.402,729 ± 55,795 | 98,035 ± 7,579 | 1,086 ± 0,170 | 38,935 ± 2,185 | 2.540,785 ± 49,296 | 49.978 / 1.000 |
-| 125.855 (toda) | todos | 6.193,084 ± 105,172 | 246,937 ± 14,470 | 2,433 ± 0,087 | 4.342,640 ± 78,843 | 10.785,094 ± 85,417 | 125.811 / 125.811 |
+| 1.000 | 10 | 93,164 ± 6,064 | 3,582 ± 0,335 | 0,037 ± 0,003 | 0,817 ± 0,202 | 97,601 ± 6,179 | 1.000 / 10 |
+| 5.000 | 50 | 449,742 ± 26,568 | 16,095 ± 3,451 | 0,140 ± 0,011 | 3,270 ± 0,857 | 469,247 ± 29,737 | 4.998 / 50 |
+| 10.000 | 100 | 879,470 ± 19,230 | 30,877 ± 1,333 | 0,297 ± 0,057 | 6,746 ± 0,558 | 917,390 ± 19,934 | 9.996 / 100 |
+| 25.000 | 500 | 2.218,394 ± 18,373 | 78,598 ± 7,154 | 0,818 ± 0,096 | 30,340 ± 3,386 | 2.328,149 ± 25,470 | 24.989 / 500 |
+| 50.000 | 1.000 | 4.602,054 ± 165,089 | 184,245 ± 7,737 | 1,835 ± 0,098 | 65,157 ± 6,400 | 4.853,291 ± 156,493 | 49.978 / 1.000 |
+| 125.855 (toda) | todos | 11.657,033 ± 123,182 | 413,325 ± 45,218 | 3,807 ± 0,397 | 7.962,563 ± 317,230 | 20.036,727 ± 474,308 | 125.811 / 125.811 |
 
 ## 5. Discussão
 
-Os tempos de carga e busca aumentam com o número de registros, conforme o percurso linear da base. Na base completa, carga, busca, inserção e escrita representam 59,48%, 14,13%, 0,11% e 26,27% para asteroides, e 57,42%, 2,29%, 0,02% e 40,27% para jogos. A inserção em bloco custa 0,839 ms para 39.380 itens aceitos em asteroides e 2,433 ms para 125.811 em jogos.
+Na base completa, carga, busca, inserção e escrita representam 65,05%, 12,58%, 0,07% e 22,30% para asteroides e 58,18%, 2,06%, 0,02% e 39,74% para jogos. A carga é a fase dominante. A inserção em bloco levou 1,100 ms para 39.380 itens aceitos em asteroides e 3,807 ms para 125.811 itens em jogos.
 
-A carga completa teve desvio padrão de 12,547 ms em asteroides e 105,172 ms em jogos. Para asteroides com N=50.000, uma amostra de carga foi 275,523 ms, enquanto as outras foram 353,849 e 367,719 ms; as três foram mantidas. As amostras são poucas e não permitem decidir se há outlier nem atribuir a diferença à máquina. `clock()` mede tempo de CPU, não tempo decorrido. O experimento mantém `linked_list` como base e `array_list` como resultado, e foi feito numa só máquina.
+O load average observado durante a coleta ficou entre 6,0 e 6,6 em uma máquina com 8 CPUs lógicas; a frequência reportada estava em 57% do máximo nominal. A máquina não estava isolada, então a carga concorrente pode ter influenciado os tempos. `clock()` mede tempo de CPU, não tempo decorrido.

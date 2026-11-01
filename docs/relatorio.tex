@@ -89,7 +89,7 @@ O programa lê um CSV, guarda cada linha como um ITEM na estrutura escolhida por
 \texttt{src/\allowbreak{}reader.c} & Lê o cabeçalho, detecta o delimitador (vírgula, ponto e vírgula ou tabulação), trata campos entre aspas e vazios e cria os itens. É o único módulo específico de cada dataset (\texttt{--reader nasa}, \texttt{--reader games}). \\
 \texttt{src/\allowbreak{}query.c} & Interpreta \texttt{FILTER}, \texttt{SIM}, \texttt{ACCEPT}, \texttt{ORDER}, \texttt{GROUP} e \texttt{CROSS}; decide se um item é aceito e calcula a similaridade. \\
 \texttt{src/\allowbreak{}collection.c} & Interface comum às oito estruturas (criar, inserir, percorrer e destruir), com um \texttt{switch} sobre o tipo escolhido. \\
-\texttt{src/\allowbreak{}export.c} & Escreve o CSV na ordem e no delimitador da entrada; em jogos, usa o cabeçalho corrigido para separar \\texttt{Discount} e \\texttt{DLC count}. \\
+\texttt{src/\allowbreak{}export.c} & Escreve o CSV na ordem e no delimitador da entrada; em jogos, usa o cabeçalho corrigido para separar \texttt{Discount} e \texttt{DLC count}. \\
 \texttt{src/\allowbreak{}main.c} & Argumentos, medição de tempo, orquestração e saída padrão. \\
 \texttt{data\_\allowbreak{}structures/\allowbreak{}} & Oito TADs, um por arquivo, cada um com o seu nó ou vetor. \\
 \bottomrule
@@ -222,12 +222,12 @@ Os seis exemplos foram reexecutados três vezes nesta auditoria; as medições i
 \toprule
 \cab{\textbf{Ex.} & \textbf{Base $\rightarrow$ resultado} & \textbf{Lidos} & \textbf{Enc.} & \textbf{Exp.} & \textbf{Carga} & \textbf{Busca} & \textbf{Ins. res.} & \textbf{Escrita}} \\
 \midrule
-1 & \texttt{linked\_\allowbreak{}list}$\rightarrow$\texttt{array\_\allowbreak{}list} & 10.000 & 93 & 93 & 91,794 & 13,293 & 0,010 & 0,853 \\
-2 & \texttt{queue}$\rightarrow$\texttt{ordered\_\allowbreak{}list} & 10.000 & 5.501 & 50 & 74,342 & 15,694 & 85,696 & 0,490 \\
-3 & \texttt{generalized\_\allowbreak{}list}$\rightarrow$\texttt{crossed\_\allowbreak{}list} & 20.000 & 12.919 & 100 & 137,972 & 29,708 & 6,710 & 0,845 \\
-4 & \texttt{linked\_\allowbreak{}list}$\rightarrow$\texttt{generalized\_\allowbreak{}list} & 10.000 & 6.145 & 100 & 512,497 & 21,991 & 15,895 & 4,561 \\
-5 & \texttt{array\_\allowbreak{}list}$\rightarrow$\texttt{crossed\_\allowbreak{}list} & 10.000 & 43 & 43 & 524,614 & 4,484 & 0,065 & 2,738 \\
-6 & \texttt{array\_\allowbreak{}list}$\rightarrow$\texttt{ordered\_\allowbreak{}list} & 10.000 & 43 & 43 & 494,867 & 7,803 & 0,100 & 2,653 \\
+1 & \texttt{linked\_\allowbreak{}list}$\rightarrow$\texttt{array\_\allowbreak{}list} & 10.000 & 93 & 93 & 90,331 & 15,793 & 0,010 & 1,037 \\
+2 & \texttt{queue}$\rightarrow$\texttt{ordered\_\allowbreak{}list} & 10.000 & 5.501 & 50 & 94,582 & 20,983 & 140,346 & 0,620 \\
+3 & \texttt{generalized\_\allowbreak{}list}$\rightarrow$\texttt{crossed\_\allowbreak{}list} & 20.000 & 12.919 & 100 & 214,005 & 45,261 & 13,927 & 1,201 \\
+4 & \texttt{linked\_\allowbreak{}list}$\rightarrow$\texttt{generalized\_\allowbreak{}list} & 10.000 & 6.145 & 100 & 908,436 & 35,567 & 24,307 & 7,651 \\
+5 & \texttt{array\_\allowbreak{}list}$\rightarrow$\texttt{crossed\_\allowbreak{}list} & 10.000 & 43 & 43 & 900,082 & 7,488 & 0,124 & 4,923 \\
+6 & \texttt{array\_\allowbreak{}list}$\rightarrow$\texttt{ordered\_\allowbreak{}list} & 10.000 & 43 & 43 & 910,608 & 15,011 & 0,147 & 4,274 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -272,7 +272,7 @@ Carregar $n$ itens custa $O(n)$ amortizado em pilha, fila e listas simples. Na l
 \subsection{Protocolo}
 
 \begin{itemize}[nosep]
-  \item Base \texttt{linked\_\allowbreak{}list} e resultado \texttt{array\_\allowbreak{}list}, nos dois datasets, com as consultas \texttt{queries/\allowbreak{}asteroids\_\allowbreak{}benchmark.txt} (\texttt{FILTER\textbar{}\allowbreak{}distance\_\allowbreak{}au\textbar{}\allowbreak{}<=\textbar{}\allowbreak{}0.1}) e \texttt{queries/\allowbreak{}games\_\allowbreak{}benchmark.txt} (\texttt{FILTER\textbar{}\allowbreak{}Windows\textbar{}\allowbreak{}==\textbar{}\allowbreak{}true}).
+  \item Base \texttt{linked\_\allowbreak{}list} e resultado \texttt{array\_\allowbreak{}list} nos dois datasets; foram usadas as consultas de benchmark de asteroides e jogos.
   \item Seis pares de \texttt{--limit} e \texttt{--top-k}: (1.000, 10), (5.000, 50), (10.000, 100), (25.000, 500), (50.000, 1.000) e (0, 0), em que zero significa toda a base e todos os resultados.
   \item Cada configuração teve uma execução de aquecimento, descartada, e três execuções medidas. As tabelas mostram a média aritmética e o desvio padrão amostral ($\pm$). As 36 medições individuais estão em \texttt{resultados/\allowbreak{}benchmark\_\allowbreak{}raw.csv}.
   \item A coluna $N$ é o número de registros lidos (\texttt{INPUT\_\allowbreak{}RECORDS}).
@@ -286,7 +286,7 @@ A busca e a inserção no resultado são feitas em duas passadas. Na primeira, \
 
 A medição por item faria duas leituras de \texttt{clock()} para cada inserção e repetiria esse custo muitas vezes. Por isso, o programa mede o laço inteiro em bloco.
 
-A máquina não estava isolada. Não foi registrado um snapshot da carga do sistema imediatamente antes desta série, então não dá para separar a variação do programa da atividade concorrente. As Tabelas~\ref{tab:ast} e~\ref{tab:jogos} usam as abreviações do glossário abaixo.
+A máquina não estava isolada. No momento da coleta, o load average era 6,64, 6,26 e 6,00; a frequência reportada estava em 57% do máximo nominal. Essa observação pontual não representa a carga durante toda a série. As Tabelas~\ref{tab:ast} e~\ref{tab:jogos} usam as abreviações do glossário abaixo.
 
 \begin{table}[!htbp]
 \centering
@@ -322,12 +322,12 @@ Enc. / exp. & \texttt{MATCHED\_RECORDS} / \texttt{OUTPUT\_RECORDS} & Registros a
 \toprule
 \cab{$\boldsymbol{N}$ & $\boldsymbol{k}$ & \textbf{Carga} & \textbf{Busca} & \textbf{Ins. res.} & \textbf{Saída} & \textbf{Total} & \textbf{Enc. / exp.}} \\
 \midrule
-1.000 & 10 & 12,150 $\pm$ 0,148 & 3,075 $\pm$ 0,816 & 0,028 $\pm$ 0,001 & 0,376 $\pm$ 0,071 & 15,629 $\pm$ 0,785 & 649 / 10 \\
-5.000 & 50 & 28,606 $\pm$ 0,854 & 6,070 $\pm$ 0,123 & 0,053 $\pm$ 0,001 & 0,420 $\pm$ 0,003 & 35,149 $\pm$ 0,965 & 3.195 / 50 \\
-10.000 & 100 & 56,270 $\pm$ 3,523 & 11,929 $\pm$ 0,552 & 0,112 $\pm$ 0,002 & 0,661 $\pm$ 0,049 & 68,972 $\pm$ 3,846 & 6.323 / 100 \\
-25.000 & 500 & 155,548 $\pm$ 5,775 & 30,834 $\pm$ 2,016 & 0,306 $\pm$ 0,006 & 3,269 $\pm$ 0,833 & 189,957 $\pm$ 6,804 & 15.249 / 500 \\
-50.000 & 1.000 & 332,364 $\pm$ 49,712 & 69,944 $\pm$ 7,257 & 0,590 $\pm$ 0,057 & 6,951 $\pm$ 0,442 & 409,849 $\pm$ 57,150 & 24.012 / 1.000 \\
-89.227 (toda) & todos & 434,041 $\pm$ 12,547 & 103,079 $\pm$ 8,536 & 0,839 $\pm$ 0,129 & 191,707 $\pm$ 18,858 & 729,666 $\pm$ 12,017 & 39.380 / 39.380 \\
+1.000 & 10 & 9,915 $\pm$ 1,144 & 2,488 $\pm$ 0,330 & 0,024 $\pm$ 0,001 & 0,337 $\pm$ 0,094 & 12,764 $\pm$ 1,102 & 649 / 10 \\
+5.000 & 50 & 45,734 $\pm$ 1,525 & 10,906 $\pm$ 1,447 & 0,093 $\pm$ 0,024 & 0,696 $\pm$ 0,028 & 57,429 $\pm$ 1,598 & 3.195 / 50 \\
+10.000 & 100 & 93,834 $\pm$ 2,991 & 21,003 $\pm$ 2,083 & 0,225 $\pm$ 0,093 & 1,128 $\pm$ 0,108 & 116,190 $\pm$ 3,057 & 6.323 / 100 \\
+25.000 & 500 & 259,943 $\pm$ 10,395 & 58,729 $\pm$ 3,694 & 0,507 $\pm$ 0,090 & 4,625 $\pm$ 0,597 & 323,805 $\pm$ 9,731 & 15.249 / 500 \\
+50.000 & 1.000 & 510,761 $\pm$ 8,330 & 101,930 $\pm$ 9,109 & 0,746 $\pm$ 0,247 & 8,911 $\pm$ 1,121 & 622,348 $\pm$ 13,754 & 24.012 / 1.000 \\
+89.227 (toda) & todos & 970,935 $\pm$ 13,388 & 187,741 $\pm$ 15,744 & 1,100 $\pm$ 0,166 & 332,816 $\pm$ 18,368 & 1.492,593 $\pm$ 36,418 & 39.380 / 39.380 \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -343,12 +343,12 @@ Enc. / exp. & \texttt{MATCHED\_RECORDS} / \texttt{OUTPUT\_RECORDS} & Registros a
 \toprule
 \cab{$\boldsymbol{N}$ & $\boldsymbol{k}$ & \textbf{Carga} & \textbf{Busca} & \textbf{Ins. res.} & \textbf{Saída} & \textbf{Total} & \textbf{Enc. / exp.}} \\
 \midrule
-1.000 & 10 & 62,656 $\pm$ 3,973 & 2,507 $\pm$ 1,323 & 0,019 $\pm$ 0,003 & 0,603 $\pm$ 0,052 & 65,785 $\pm$ 5,257 & 1.000 / 10 \\
-5.000 & 50 & 245,154 $\pm$ 2,946 & 7,924 $\pm$ 0,222 & 0,080 $\pm$ 0,009 & 2,010 $\pm$ 0,192 & 255,168 $\pm$ 3,007 & 4.998 / 50 \\
-10.000 & 100 & 490,325 $\pm$ 35,630 & 19,631 $\pm$ 0,230 & 0,180 $\pm$ 0,006 & 4,009 $\pm$ 0,138 & 514,145 $\pm$ 35,589 & 9.996 / 100 \\
-25.000 & 500 & 1.201,504 $\pm$ 59,925 & 43,898 $\pm$ 0,777 & 0,524 $\pm$ 0,020 & 19,399 $\pm$ 1,924 & 1.265,325 $\pm$ 59,430 & 24.989 / 500 \\
-50.000 & 1.000 & 2.402,729 $\pm$ 55,795 & 98,035 $\pm$ 7,579 & 1,086 $\pm$ 0,170 & 38,935 $\pm$ 2,185 & 2.540,785 $\pm$ 49,296 & 49.978 / 1.000 \\
-125.855 (toda) & todos & 6.193,084 $\pm$ 105,172 & 246,937 $\pm$ 14,470 & 2,433 $\pm$ 0,087 & 4.342,640 $\pm$ 78,843 & 10.785,094 $\pm$ 85,417 & 125.811 / 125.811 \\
+1.000 & 10 & 93,164 $\pm$ 6,064 & 3,582 $\pm$ 0,335 & 0,037 $\pm$ 0,003 & 0,817 $\pm$ 0,202 & 97,601 $\pm$ 6,179 & 1.000 / 10 \\
+5.000 & 50 & 449,742 $\pm$ 26,568 & 16,095 $\pm$ 3,451 & 0,140 $\pm$ 0,011 & 3,270 $\pm$ 0,857 & 469,247 $\pm$ 29,737 & 4.998 / 50 \\
+10.000 & 100 & 879,470 $\pm$ 19,230 & 30,877 $\pm$ 1,333 & 0,297 $\pm$ 0,057 & 6,746 $\pm$ 0,558 & 917,390 $\pm$ 19,934 & 9.996 / 100 \\
+25.000 & 500 & 2.218,394 $\pm$ 18,373 & 78,598 $\pm$ 7,154 & 0,818 $\pm$ 0,096 & 30,340 $\pm$ 3,386 & 2.328,149 $\pm$ 25,470 & 24.989 / 500 \\
+50.000 & 1.000 & 4.602,054 $\pm$ 165,089 & 184,245 $\pm$ 7,737 & 1,835 $\pm$ 0,098 & 65,157 $\pm$ 6,400 & 4.853,291 $\pm$ 156,493 & 49.978 / 1.000 \\
+125.855 (toda) & todos & 11.657,033 $\pm$ 123,182 & 413,325 $\pm$ 45,218 & 3,807 $\pm$ 0,397 & 7.962,563 $\pm$ 317,230 & 20.036,727 $\pm$ 474,308 & 125.811 / 125.811 \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -374,12 +374,12 @@ Para comparar com o crescimento esperado, a Tabela~\ref{tab:custo-registro} divi
 \toprule
 \cab{\textbf{Dataset} & $\boldsymbol{N}$ & \textbf{Carga / lido} & \textbf{Busca / lido} & \textbf{Ins. / aceito} & $\boldsymbol{k}$ & \textbf{Saída / exp.}} \\
 \midrule
-Asteroides & 1.000 & 12,15 & 3,08 & 0,04 & 10 & 37,63 \\
-Asteroides & 25.000 & 6,22 & 1,23 & 0,02 & 500 & 6,54 \\
-Asteroides & 89.227 & 4,86 & 1,16 & 0,02 & 39.380 & 4,87 \\
-Jogos & 1.000 & 62,66 & 2,51 & 0,02 & 10 & 60,30 \\
-Jogos & 25.000 & 48,06 & 1,76 & 0,02 & 500 & 38,80 \\
-Jogos & 125.855 & 49,21 & 1,96 & 0,02 & 125.811 & 34,52 \\
+Asteroides & 1.000 & 9,92 & 2,49 & 0,04 & 10 & 33,70 \\
+Asteroides & 25.000 & 10,40 & 2,35 & 0,03 & 500 & 9,25 \\
+Asteroides & 89.227 & 10,88 & 2,10 & 0,03 & 39.380 & 8,45 \\
+Jogos & 1.000 & 93,16 & 3,58 & 0,04 & 10 & 81,70 \\
+Jogos & 25.000 & 88,74 & 3,14 & 0,03 & 500 & 60,68 \\
+Jogos & 125.855 & 92,62 & 3,28 & 0,03 & 125.811 & 63,29 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -398,11 +398,11 @@ A Tabela~\ref{tab:insercao} divide o tempo de inserção pelo número de itens a
 \cab{\textbf{Ex.} & \textbf{Estrutura do resultado} & \textbf{Itens inseridos} & \textbf{Ins. res. (ms)} & \textbf{Por item (µs)}} \\
 \midrule
 1 & \texttt{array\_\allowbreak{}list} & 93 & 0,010 & 0,10 \\
-2 & \texttt{ordered\_\allowbreak{}list} & 5.501 & 85,696 & 15,58 \\
-3 & \texttt{crossed\_\allowbreak{}list} & 12.919 & 6,710 & 0,52 \\
-4 & \texttt{generalized\_\allowbreak{}list} & 6.145 & 15,895 & 2,59 \\
-5 & \texttt{crossed\_\allowbreak{}list} & 43 & 0,065 & 1,50 \\
-6 & \texttt{ordered\_\allowbreak{}list} & 43 & 0,100 & 2,32 \\
+2 & \texttt{ordered\_\allowbreak{}list} & 5.501 & 140,346 & 25,51 \\
+3 & \texttt{crossed\_\allowbreak{}list} & 12.919 & 13,927 & 1,08 \\
+4 & \texttt{generalized\_\allowbreak{}list} & 6.145 & 24,307 & 3,96 \\
+5 & \texttt{crossed\_\allowbreak{}list} & 43 & 0,124 & 2,88 \\
+6 & \texttt{ordered\_\allowbreak{}list} & 43 & 0,147 & 3,41 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -416,21 +416,21 @@ A Tabela~\ref{tab:insercao} divide o tempo de inserção pelo número de itens a
 
 \subsection{Discussão}
 
-\paragraph{Carga e busca.} Ambas crescem com $N$, conforme o percurso linear da base. O custo por registro varia mais nas menores amostras: na tabela selecionada, carga vai de 4,86 a 12,15~µs por registro em asteroides e de 48,06 a 62,66~µs em jogos; busca vai de 1,16 a 3,08~µs em asteroides e de 1,76 a 2,51~µs em jogos. Na base completa, o desvio padrão da carga foi 12,547~ms em asteroides e 105,172~ms em jogos. Para asteroides com $N=50.000$, uma amostra de carga foi 275,523~ms e as outras foram 353,849 e 367,719~ms; todas foram mantidas.
+\paragraph{Carga e busca.} Ambas crescem com $N$, conforme o percurso linear da base. Na tabela selecionada, a carga por registro ficou entre 9,92 e 10,88~µs em asteroides e entre 88,74 e 93,16~µs em jogos; a busca ficou entre 2,10 e 2,49~µs em asteroides e entre 3,14 e 3,58~µs em jogos. Na base completa, o desvio padrão da carga foi 13,388~ms em asteroides e 123,182~ms em jogos. Para asteroides com $N=50.000$, as cargas medidas foram 501,255, 514,242 e 516,786~ms.
 
-\paragraph{Inserção no resultado com \texttt{array\_\allowbreak{}list}.} Medida em bloco, a inserção média na base completa foi 0,839~ms para 39.380 itens de asteroides e 2,433~ms para 125.811 itens de jogos, cerca de 0,02~µs por item.
+\paragraph{Inserção no resultado.} Com \texttt{array\_\allowbreak{}list}, medida em bloco, a inserção média na base completa foi 1,100~ms para 39.380 itens de asteroides e 3,807~ms para 125.811 itens de jogos.
 
-\paragraph{Composição do total e saída.} Na base completa, carga, busca, inserção e escrita representam 59,48\%, 14,13\%, 0,11\% e 26,27\% para asteroides, e 57,42\%, 2,29\%, 0,02\% e 40,27\% para jogos. A escrita é a segunda maior fase nos dois casos. Para $k=10$, o custo de saída é 37,63~µs por registro em asteroides e 60,30~µs em jogos; esse valor inclui abrir o arquivo e gravar o cabeçalho. O custo é $O(kp^2)$, pois cada coluna procura seu valor com \texttt{item\_get}.
+\paragraph{Composição do total e saída.} Na base completa, carga, busca, inserção e escrita representam 65,05\%, 12,58\%, 0,07\% e 22,30\% para asteroides, e 58,18\%, 2,06\%, 0,02\% e 39,74\% para jogos. Para $k=10$, o custo de saída é 33,70~µs por registro em asteroides e 81,70~µs em jogos; esse valor inclui abrir o arquivo e gravar o cabeçalho. O custo é $O(kp^2)$, pois cada coluna procura seu valor com \texttt{item\_get}.
 
-\paragraph{Estruturas avançadas.} A Tabela~\ref{tab:insercao} e a Figura~\ref{fig:insercao} comparam os seis exemplos medidos. O custo por item foi 0,10~µs no array com 93 itens, 15,58~µs na lista ordenada com 5.501 itens, 0,52~µs na coleção cruzada com 12.919, 2,59~µs na generalizada com 6.145, 1,50~µs na cruzada com 43 e 2,32~µs na ordenada com 43. São casos diferentes e a comparação é qualitativa.
+\paragraph{Estruturas avançadas.} A Tabela~\ref{tab:insercao} e a Figura~\ref{fig:insercao} comparam os seis exemplos medidos. O custo por item variou de 0,10 a 25,51~µs. São casos diferentes e a comparação é qualitativa.
 
 \paragraph{Limitações.} Os experimentos controlados mantiveram base e resultado fixos (\texttt{linked\_\allowbreak{}list}$\rightarrow$\allowbreak{}\texttt{array\_\allowbreak{}list}). As estruturas avançadas aparecem apenas nos seis exemplos, que diferem em consulta, dataset e tamanho; a comparação da Tabela~\ref{tab:insercao} é, portanto, qualitativa e não substitui um fatorial de benchmark. Cada medição se baseia em apenas três execuções, e a máquina não estava isolada (Seção~\ref{sec:met}). Cada configuração teve um aquecimento seguido de três medidas; o aquecimento não é gravado no CSV. Como o relógio mede CPU, esperas de disco não aparecem. Todas as medições foram feitas em uma única máquina.
 
 %------------------------------------------------------------------
 \section{Conclusão}
 
-As oito estruturas estão disponíveis pela mesma interface de coleção. A série de benchmark foi repetida para os dois datasets, com aquecimento e três medidas por configuração. Na base completa, a carga domina o tempo total e a escrita é a segunda maior fase.
+As oito estruturas estão disponíveis pela mesma interface de coleção. A série de benchmark foi repetida para os dois datasets, com aquecimento e três medidas por configuração. Na base completa, a carga domina o tempo total, enquanto a escrita também tem peso relevante, especialmente em jogos.
 
-Nos seis exemplos, os custos de inserção por item variaram de 0,10 a 15,58~µs. A lista cruzada agrupa itens com as mesmas chaves em uma lista por célula. Os exemplos diferem em consulta, dataset e quantidade de itens, então a comparação é qualitativa.
+Nos seis exemplos, os custos de inserção por item variaram de 0,10 a 25,51~µs. A lista cruzada agrupa itens com as mesmas chaves em uma lista por célula. Os exemplos diferem em consulta, dataset e quantidade de itens, então a comparação é qualitativa.
 
 \end{document}

@@ -12,63 +12,63 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 5 0 obj
-<< /Length 1607 >>
+<< /Length 1604 >>
 stream
 0.82 G 0.4 w
 48 50.00 m 493 50.00 l S
 BT /F1 7 Tf 25.00 48.00 Td (0) Tj ET
 0.82 G 0.4 w
-48 86.25 m 493 86.25 l S
-BT /F1 7 Tf 25.00 84.25 Td (5) Tj ET
+48 74.08 m 493 74.08 l S
+BT /F1 7 Tf 25.00 72.08 Td (5) Tj ET
 0.82 G 0.4 w
-48 122.50 m 493 122.50 l S
-BT /F1 7 Tf 25.00 120.50 Td (10) Tj ET
+48 98.16 m 493 98.16 l S
+BT /F1 7 Tf 25.00 96.16 Td (10) Tj ET
 0.82 G 0.4 w
-48 158.75 m 493 158.75 l S
-BT /F1 7 Tf 25.00 156.75 Td (15) Tj ET
+48 122.25 m 493 122.25 l S
+BT /F1 7 Tf 25.00 120.25 Td (15) Tj ET
 0.82 G 0.4 w
-48 195.00 m 493 195.00 l S
-BT /F1 7 Tf 25.00 193.00 Td (20) Tj ET
+48 146.33 m 493 146.33 l S
+BT /F1 7 Tf 25.00 144.33 Td (20) Tj ET
 0.75 g
-66 50 38 0.75 re f
+66 50 38 0.50 re f
 0 G 0.5 w
-66 50 38 0.75 re S
-BT /F1 7 Tf 64.00 54.75 Td (0.10) Tj ET
+66 50 38 0.50 re S
+BT /F1 7 Tf 64.00 54.50 Td (0.10) Tj ET
 BT /F1 6 Tf 63.00 37.00 Td (array_list) Tj ET
 BT /F1 6 Tf 67.00 27.00 Td (\(93\)) Tj ET
 0.38 g
-138 50 38 112.94 re f
+138 50 38 122.88 re f
 0 G 0.5 w
-138 50 38 112.94 re S
-BT /F1 7 Tf 136.00 166.94 Td (15.58) Tj ET
+138 50 38 122.88 re S
+BT /F1 7 Tf 136.00 176.88 Td (25.51) Tj ET
 BT /F1 6 Tf 135.00 37.00 Td (ordered_list) Tj ET
 BT /F1 6 Tf 139.00 27.00 Td (\(5.501\)) Tj ET
 0.12 g
-210 50 38 3.77 re f
+210 50 38 5.19 re f
 0 G 0.5 w
-210 50 38 3.77 re S
-BT /F1 7 Tf 208.00 57.77 Td (0.52) Tj ET
+210 50 38 5.19 re S
+BT /F1 7 Tf 208.00 59.19 Td (1.08) Tj ET
 BT /F1 6 Tf 207.00 37.00 Td (crossed_list) Tj ET
 BT /F1 6 Tf 211.00 27.00 Td (\(12.919\)) Tj ET
 0.55 g
-282 50 38 18.75 re f
+282 50 38 19.05 re f
 0 G 0.5 w
-282 50 38 18.75 re S
-BT /F1 7 Tf 280.00 72.75 Td (2.59) Tj ET
+282 50 38 19.05 re S
+BT /F1 7 Tf 280.00 73.05 Td (3.96) Tj ET
 BT /F1 6 Tf 279.00 37.00 Td (generalized_list) Tj ET
 BT /F1 6 Tf 283.00 27.00 Td (\(6.145\)) Tj ET
 0.12 g
-354 50 38 10.90 re f
+354 50 38 13.89 re f
 0 G 0.5 w
-354 50 38 10.90 re S
-BT /F1 7 Tf 352.00 64.90 Td (1.50) Tj ET
+354 50 38 13.89 re S
+BT /F1 7 Tf 352.00 67.89 Td (2.88) Tj ET
 BT /F1 6 Tf 351.00 37.00 Td (crossed_list) Tj ET
 BT /F1 6 Tf 355.00 27.00 Td (\(43\)) Tj ET
 0.38 g
-426 50 38 16.80 re f
+426 50 38 16.43 re f
 0 G 0.5 w
-426 50 38 16.80 re S
-BT /F1 7 Tf 424.00 70.80 Td (2.32) Tj ET
+426 50 38 16.43 re S
+BT /F1 7 Tf 424.00 70.43 Td (3.41) Tj ET
 BT /F1 6 Tf 423.00 37.00 Td (ordered_list) Tj ET
 BT /F1 6 Tf 427.00 27.00 Td (\(43\)) Tj ET
 BT /F1 8 Tf 208.00 12.00 Td (Insercao por item \(us\)) Tj ET
@@ -85,5 +85,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1969
+1966
 %%EOF
